@@ -11,19 +11,19 @@ let isMobileMode = window.innerWidth <= 768;
 
 // --- Local Storage Ranking ---
 function getHistory() {
-    const data = localStorage.getItem('iptv_sim_history');
+    const data = localStorage.getItem('chat_sim_history');
     return data ? JSON.parse(data) : [];
 }
 
 function saveHistory(result) {
     const history = getHistory();
     history.push(result);
-    localStorage.setItem('iptv_sim_history', JSON.stringify(history));
+    localStorage.setItem('chat_sim_history', JSON.stringify(history));
     updateRankingUI();
 }
 
 function clearHistory() {
-    localStorage.removeItem('iptv_sim_history');
+    localStorage.removeItem('chat_sim_history');
     updateRankingUI();
 }
 
@@ -325,8 +325,6 @@ async function populateGuidance() {
 
 // --- List Render ---
 async function renderChatList() {
-    chatListEl.innerHTML = '';
-    
     const dbCategories = await DB.getAllCategories();
     const dbScenarios = await DB.getAllScenarios();
     
@@ -353,6 +351,7 @@ async function renderChatList() {
     });
     
     // Render
+    chatListEl.innerHTML = '';
     Object.keys(categories).forEach(cat => {
         const header = document.createElement('div');
         header.className = 'category-header collapsed';
