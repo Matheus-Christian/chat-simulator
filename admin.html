@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - Simulador IPTV</title>
+    <title>Painel Admin - Chat Simulator</title>
     <link rel="stylesheet" href="admin.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
@@ -106,14 +106,37 @@
 
     <!-- Modals -->
     <div id="modal-category" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content large">
             <h2 id="modal-cat-title">Nova Categoria</h2>
             <div class="form-group">
                 <label>Nome da Categoria</label>
                 <input type="text" id="cat-name" placeholder="Ex: Financeiro">
+                <input type="hidden" id="cat-original-name">
             </div>
-            <div class="modal-buttons">
-                <button id="btn-save-cat" class="primary-btn">Salvar</button>
+            
+            <hr>
+            <h3>Orientações (Guidance)</h3>
+            
+            <div class="steps-header">
+                <h4>Práticas Recomendadas</h4>
+                <button id="btn-add-cat-practice" class="secondary-btn small"><i class="ph ph-plus"></i> Add Prática</button>
+            </div>
+            <div id="cat-practices-container"></div>
+            
+            <div class="steps-header">
+                <h4>Passos de Sondagem</h4>
+                <button id="btn-add-cat-step" class="secondary-btn small"><i class="ph ph-plus"></i> Add Passo</button>
+            </div>
+            <div id="cat-steps-container"></div>
+            
+            <div class="steps-header">
+                <h4>Sugestões de Solução</h4>
+                <button id="btn-add-cat-suggestion" class="secondary-btn small"><i class="ph ph-plus"></i> Add Sugestão</button>
+            </div>
+            <div id="cat-suggestions-container"></div>
+
+            <div class="modal-buttons margin-top">
+                <button id="btn-save-cat" class="primary-btn">Salvar Categoria</button>
                 <button class="secondary-btn btn-cancel">Cancelar</button>
             </div>
         </div>

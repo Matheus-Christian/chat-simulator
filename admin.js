@@ -109,7 +109,10 @@ async function renderCategories() {
         div.className = 'list-card';
         div.innerHTML = `
             <span><strong>${cat.name}</strong></span>
-            <button class="danger-btn" onclick="deleteCategory('${cat.name}')"><i class="ph ph-trash"></i></button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="primary-btn small" onclick="editCategory('${cat.name}')"><i class="ph ph-pencil"></i></button>
+                <button class="danger-btn" onclick="deleteCategory('${cat.name}')"><i class="ph ph-trash"></i></button>
+            </div>
         `;
         list.appendChild(div);
         
@@ -127,19 +130,86 @@ async function renderCategories() {
 }
 
 document.getElementById('btn-new-category').addEventListener('click', () => {
+    document.getElementById('modal-cat-title').textContent = 'Nova Categoria';
     document.getElementById('cat-name').value = '';
+    document.getElementById('cat-original-name').value = '';
+    
+    document.getElementById('cat-practices-container').innerHTML = '';
+    document.getElementById('cat-steps-container').innerHTML = '';
+    document.getElementById('cat-suggestions-container').innerHTML = '';
+    
+    addCatGuidanceField('cat-practices-container', '');
+    addCatGuidanceField('cat-steps-container', '');
+    addCatGuidanceField('cat-suggestions-container', '');
+
     document.getElementById('modal-category').classList.remove('hidden');
 });
 
 document.getElementById('btn-save-cat').addEventListener('click', async () => {
     const name = document.getElementById('cat-name').value.trim();
+    const originalName = document.getElementById('cat-original-name').value;
+    
     if (name) {
-        await DB.addCategory({ name, guidance: { practices: [], steps: [], suggestions: [] } });
+        const practices = Array.from(document.querySelectorAll('#cat-practices-container .guidance-input')).map(inp => inp.value.trim()).filter(v => v);
+        const steps = Array.from(document.querySelectorAll('#cat-steps-container .guidance-input')).map(inp => inp.value.trim()).filter(v => v);
+        const suggestions = Array.from(document.querySelectorAll('#cat-suggestions-container .guidance-input')).map(inp => inp.value.trim()).filter(v => v);
+        
+        const category = {
+            name: name,
+            guidance: { practices, steps, suggestions }
+        };
+        
+        if (originalName && originalName !== name) {
+            await DB.deleteCategory(originalName);
+        }
+        
+        await DB.addCategory(category);
         document.getElementById('modal-category').classList.add('hidden');
         await renderCategories();
         await refreshDashboard();
     }
 });
+
+// --- Dynamic Guidance Fields ---
+function addCatGuidanceField(containerId, value = '') {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'step-row';
+    div.style.display = 'flex';
+    div.style.gap = '0.5rem';
+    div.style.marginBottom = '0.5rem';
+    div.innerHTML = `
+        <input type="text" class="guidance-input" value="${value}" placeholder="Digite a instrução..." style="flex:1">
+        <button class="danger-btn small" onclick="this.parentElement.remove()"><i class="ph ph-trash"></i></button>
+    `;
+    container.appendChild(div);
+}
+
+document.getElementById('btn-add-cat-practice').addEventListener('click', () => addCatGuidanceField('cat-practices-container'));
+document.getElementById('btn-add-cat-step').addEventListener('click', () => addCatGuidanceField('cat-steps-container'));
+document.getElementById('btn-add-cat-suggestion').addEventListener('click', () => addCatGuidanceField('cat-suggestions-container'));
+
+window.editCategory = async function(name) {
+    const cats = await DB.getAllCategories();
+    const cat = cats.find(c => c.name === name);
+    if (!cat) return;
+
+    document.getElementById('modal-cat-title').textContent = 'Editar Categoria';
+    document.getElementById('cat-name').value = cat.name;
+    document.getElementById('cat-original-name').value = cat.name;
+
+    document.getElementById('cat-practices-container').innerHTML = '';
+    document.getElementById('cat-steps-container').innerHTML = '';
+    document.getElementById('cat-suggestions-container').innerHTML = '';
+
+    const guidance = cat.guidance || { practices: [], steps: [], suggestions: [] };
+    
+    guidance.practices.forEach(val => addCatGuidanceField('cat-practices-container', val));
+    guidance.steps.forEach(val => addCatGuidanceField('cat-steps-container', val));
+    guidance.suggestions.forEach(val => addCatGuidanceField('cat-suggestions-container', val));
+
+    document.getElementById('modal-category').classList.remove('hidden');
+};
 
 window.deleteCategory = async (name) => {
     if (confirm(`Tem certeza que deseja excluir a categoria '${name}'?`)) {
@@ -363,7 +433,7 @@ document.getElementById('btn-export').addEventListener('click', async () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `iptv_sim_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `chat_sim_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
 });
