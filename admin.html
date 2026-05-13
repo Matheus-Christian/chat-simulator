@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Simulador IPTV</title>
+    <link rel="stylesheet" href="admin.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div id="login-screen" class="screen">
+        <div class="login-box">
+            <i class="ph ph-lock-key logo-icon"></i>
+            <h2>Acesso Restrito</h2>
+            <p>Painel de Controle do Simulador</p>
+            <input type="password" id="admin-password" placeholder="Senha mestre">
+            <button id="btn-login" class="primary-btn">Entrar</button>
+            <p id="login-error" class="error-text hidden">Senha incorreta</p>
+        </div>
+    </div>
+
+    <div id="admin-dashboard" class="screen hidden">
+        <aside class="admin-sidebar">
+            <div class="brand">
+                <i class="ph ph-database"></i>
+                <h2>Simulador Admin</h2>
+            </div>
+            <nav>
+                <a href="#" id="nav-dashboard" class="active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="#" id="nav-categories"><i class="ph ph-folder"></i> Categorias</a>
+                <a href="#" id="nav-scenarios"><i class="ph ph-list-dashes"></i> Cenários</a>
+                <a href="#" id="nav-backup"><i class="ph ph-cloud-arrow-up"></i> Backup</a>
+            </nav>
+            <button id="btn-logout" class="logout-btn"><i class="ph ph-sign-out"></i> Sair</button>
+        </aside>
+
+        <main class="admin-content">
+            <header class="topbar">
+                <h3>Bem-vindo, Administrador</h3>
+            </header>
+            
+            <div class="content-wrapper">
+                <!-- Dashboard Section -->
+                <section id="sec-dashboard" class="admin-section">
+                    <h1>Dashboard Overview</h1>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="ph ph-folder"></i>
+                            <div class="stat-info">
+                                <h3>Categorias</h3>
+                                <p id="stat-categories">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="ph ph-list-dashes"></i>
+                            <div class="stat-info">
+                                <h3>Cenários</h3>
+                                <p id="stat-scenarios">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Categories Section -->
+                <section id="sec-categories" class="admin-section hidden">
+                    <div class="section-header">
+                        <h1>Gerenciar Categorias</h1>
+                        <button id="btn-new-category" class="primary-btn"><i class="ph ph-plus"></i> Nova Categoria</button>
+                    </div>
+                    <div class="card-list" id="categories-list"></div>
+                </section>
+
+                <!-- Scenarios Section -->
+                <section id="sec-scenarios" class="admin-section hidden">
+                    <div class="section-header">
+                        <h1>Gerenciar Cenários</h1>
+                        <button id="btn-new-scenario" class="primary-btn"><i class="ph ph-plus"></i> Novo Cenário</button>
+                    </div>
+                    <div class="filter-bar">
+                        <select id="filter-category">
+                            <option value="">Todas as Categorias</option>
+                        </select>
+                    </div>
+                    <div class="scenarios-grid" id="scenarios-list"></div>
+                </section>
+
+                <!-- Backup Section -->
+                <section id="sec-backup" class="admin-section hidden">
+                    <h1>Backup e Restauração</h1>
+                    <div class="backup-card">
+                        <p>Exporte o banco de dados atual para JSON. Isso permite compartilhar cenários ou fazer backup de segurança.</p>
+                        <div class="backup-actions">
+                            <button id="btn-export" class="primary-btn"><i class="ph ph-download"></i> Exportar Banco (.json)</button>
+                        </div>
+                        <hr>
+                        <p>Restaure o banco a partir de um arquivo JSON. <strong>Atenção:</strong> Isso sobrescreverá os dados atuais.</p>
+                        <div class="backup-actions">
+                            <label for="import-file" class="primary-btn alt"><i class="ph ph-upload"></i> Importar Banco (.json)</label>
+                            <input type="file" id="import-file" accept=".json" style="display:none">
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-category" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-cat-title">Nova Categoria</h2>
+            <div class="form-group">
+                <label>Nome da Categoria</label>
+                <input type="text" id="cat-name" placeholder="Ex: Financeiro">
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-save-cat" class="primary-btn">Salvar</button>
+                <button class="secondary-btn btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-scenario" class="modal hidden">
+        <div class="modal-content large">
+            <h2 id="modal-scen-title">Novo Cenário</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ID Único</label>
+                    <input type="text" id="scen-id" placeholder="Ex: fin_facil_1">
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="scen-category"></select>
+                </div>
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="scen-title" placeholder="Ex: Nível Fácil">
+                </div>
+            </div>
+            
+            <div class="steps-header">
+                <h3>Passos do Atendimento</h3>
+                <button id="btn-add-step" class="secondary-btn small"><i class="ph ph-plus"></i> Add Passo</button>
+            </div>
+            <div id="scen-steps-container"></div>
+
+            <div class="modal-buttons margin-top">
+                <button id="btn-save-scen" class="primary-btn">Salvar Cenário</button>
+                <button class="secondary-btn btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+    <script src="db.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

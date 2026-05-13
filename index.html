@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao Simulador IPTV</title>
+    <link rel="stylesheet" href="welcome.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <!-- Intro Screen -->
+    <div class="intro-screen" id="intro-screen">
+        <div class="intro-content">
+            <h1 class="intro-title">Simulador de Suporte</h1>
+            <p class="intro-subtitle">Treinamento Interativo de Atendimento</p>
+            
+            <div class="intro-cards">
+                <div class="intro-card">
+                    <div class="card-icon"><i class="ph ph-users"></i></div>
+                    <h3>Selecione o Cliente</h3>
+                    <p>Atenda casos variados gerados aleatoriamente.</p>
+                </div>
+                <div class="intro-card">
+                    <div class="card-icon"><i class="ph ph-stethoscope"></i></div>
+                    <h3>Faça a Sondagem</h3>
+                    <p>Escolha a resposta mais adequada para cada situação.</p>
+                </div>
+                <div class="intro-card">
+                    <div class="card-icon"><i class="ph ph-check-circle"></i></div>
+                    <h3>Tome a Decisão</h3>
+                    <p>Sua assertividade definirá o seu nível de qualidade.</p>
+                </div>
+            </div>
+
+            <div class="info-sections">
+                <div class="info-block">
+                    <h3><i class="ph ph-target"></i> Objetivo do Simulador</h3>
+                    <p>O simulador é uma ferramenta de capacitação desenvolvida para preparar novos operadores, especialmente aqueles que estão ingressando no setor de provedores de internet (ISPs). Mais do que testar o conhecimento técnico puro, o foco está em avaliar a percepção analítica do operador e sua capacidade de comunicação assertiva diante de diferentes níveis de complexidade.</p>
+                </div>
+                <div class="info-block">
+                    <h3><i class="ph ph-scales"></i> O que define a "Decisão" no Simulador?</h3>
+                    <p>No contexto do treinamento, uma "Decisão" é o equilíbrio entre a sondagem técnica precisa e a comunicação adequada. Para cada interação do cliente, o operador deve escolher o argumento que melhor se adapta ao contexto da reclamação.</p>
+                    <p><strong>Dinâmica:</strong> Cada chat apresenta níveis de complexidade (Fácil, Médio e Avançado) com duas opções de resposta: uma positiva (correta) e outra negativa (equivocada). As respostas são desenhadas para serem intuitivas, incentivando a tomada de decisão lógica.</p>
+                    <div class="info-alert">
+                        <i class="ph ph-warning-circle"></i>
+                        <p><strong>Observação Importante:</strong> No momento, o segundo chat do Nível Avançado na Categoria IPTV / TV Box ainda está em fase de validação; portanto, os resultados desta etapa específica não devem ser considerados para fins de avaliação. Em breve, as demais categorias receberão mais chats.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prerequisites-section">
+                <h3 class="prereq-title">Pré-requisitos para o Simulador</h3>
+                <ul class="prereq-list">
+                    <li>
+                        <div class="prereq-icon"><i class="ph ph-book-open"></i></div>
+                        <span>Leitura Obrigatória: Material 'Tratando IPTV / TVBox'</span>
+                    </li>
+                </ul>
+                <div class="prereq-checkbox-group">
+                    <input type="checkbox" id="chk-ciente">
+                    <label for="chk-ciente">Estou ciente e realizei a leitura obrigatória.</label>
+                </div>
+            </div>
+            
+            <button class="btn-primary intro-btn" id="btn-start-sim" disabled>Iniciar Treinamento</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen (WhatsApp Style) -->
+    <div class="loading-screen" id="loading-screen" style="display: none;">
+        <div class="loading-content">
+            <img src="assets/logo.png" alt="Logo" class="loading-logo">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p class="loading-text" id="loading-text">A configurar ambiente...</p>
+        </div>
+    </div>
+
+    <script src="welcome.js"></script>
+</body>
+</html>

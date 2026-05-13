@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Atendimento</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for WhatsApp-like UI -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="app-container" id="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="user-profile">
+                    <img src="assets/logo.png" alt="Logo da Empresa" class="brand-logo">
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Som" id="btn-sound"><i class="ph ph-speaker-high" id="sound-icon"></i></button>
+                </div>
+            </header>
+            
+            <div class="ranking-panel" id="ranking-panel">
+                <div class="ranking-item">
+                    <span class="ranking-label">Última:</span>
+                    <span class="ranking-value" id="rank-last">0%</span>
+                </div>
+                <div class="ranking-item">
+                    <span class="ranking-label">Melhor:</span>
+                    <span class="ranking-value" id="rank-best" style="color: #25D366;">0%</span>
+                </div>
+                <button class="icon-btn small-btn" title="Limpar Histórico" id="btn-clear-history"><i class="ph ph-trash"></i></button>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" placeholder="Pesquisar atendimento..." disabled>
+                </div>
+            </div>
+            <div class="chat-list" id="chat-list">
+                <!-- Chat list items will be injected here by JS -->
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="chat-header-info">
+                    <button class="icon-btn mobile-back-btn" id="btn-back-mobile"><i class="ph ph-arrow-left"></i></button>
+                    <img src="https://ui-avatars.com/api/?name=C&background=ccc&color=333" alt="Avatar Cliente" class="avatar" id="active-client-avatar">
+                    <div class="client-details">
+                        <span class="client-name" id="active-client-name">Selecione um atendimento</span>
+                        <span class="client-status" id="active-client-status">Aguardando...</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="kpi-panel">
+                        <div class="kpi-item">
+                            <span class="kpi-label">TMA:</span>
+                            <span class="kpi-value" id="kpi-tma">00:00</span>
+                        </div>
+                        <div class="kpi-item">
+                            <span class="kpi-label">Protocolo:</span>
+                            <span class="kpi-value" id="kpi-protocol">------</span>
+                        </div>
+                    </div>
+                    <button class="icon-btn" title="Orientações" id="btn-guidance" disabled><i class="ph ph-info"></i></button>
+                </div>
+            </header>
+
+            <aside class="guidance-popup" id="guidance-popup">
+                <div class="guidance-header">
+                    <h3>Orientações - <span id="guidance-category-name">Categoria</span></h3>
+                    <button class="icon-btn small-btn" id="btn-close-guidance"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="guidance-content">
+                    <div class="guidance-section">
+                        <h4><i class="ph ph-check-circle"></i> Boas Práticas</h4>
+                        <ul id="guidance-practices"></ul>
+                    </div>
+                    <div class="guidance-section">
+                        <h4><i class="ph ph-list-numbers"></i> Passos Recomendados</h4>
+                        <ul id="guidance-steps"></ul>
+                    </div>
+                    <div class="guidance-section">
+                        <h4><i class="ph ph-lightbulb"></i> Sugestões de Solução</h4>
+                        <ul id="guidance-suggestions"></ul>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="chat-box" id="chat-box">
+                <!-- Chat messages will appear here -->
+                <div class="welcome-screen" id="welcome-screen">
+                    <i class="ph ph-headset" style="font-size: 80px; color: #ccc;"></i>
+                    <h2>Simulador de Atendimento</h2>
+                    <p>Selecione um cliente na lista à esquerda para começar o treinamento.</p>
+                    <p>Depois clique no ícone de informações no canto superior direito para receber algumas orientações.</p>
+                </div>
+            </div>
+
+            <footer class="chat-footer">
+                <div class="options-container" id="options-container">
+                    <!-- Operator response options will be injected here -->
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Final Result Modal -->
+    <div class="modal-overlay" id="result-modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="result-title">Atendimento Finalizado!</h2>
+            
+            <div class="result-highlight" id="result-decisions-text">
+                ✅ Você acertou 0 de 0 decisões
+            </div>
+
+            <div class="result-stats">
+                <div class="stat">
+                    <span class="stat-label">Pontos</span>
+                    <span class="stat-value" id="result-score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Assertividade</span>
+                    <span class="stat-value" id="result-accuracy">0%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">TMA</span>
+                    <span class="stat-value" id="result-time">00:00</span>
+                </div>
+            </div>
+            
+            <div class="result-level" id="result-level-text">
+                Nível: Regular
+            </div>
+
+            <p id="result-feedback" class="result-feedback"></p>
+            <button id="btn-restart" class="btn-primary">Voltar aos Atendimentos</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
