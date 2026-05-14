@@ -90,6 +90,42 @@ const DB = {
         return database.ref('scenarios/' + safeKey(id)).once('value').then(snap => snap.val());
     },
     
+    // --- Resultados ---
+    saveResult: async function(fbKey, categoryName, scenarioId, assertividade, tma, passed) {
+        if (!fbKey || fbKey === 'admin') return; // Do not save admin results
+        
+        const safeCat = safeKey(categoryName);
+        const safeScen = safeKey(scenarioId);
+        const ref = database.ref(`results/${fbKey}/${safeCat}/${safeScen}`);
+        
+        // We can optionally keep track of the best attempt or the latest. Let's keep the best assertividade or latest?
+        // Since we want progression, we'll store the best assertividade.
+        const existing = await ref.once('value');
+        let currentBest = 0;
+        let attempts = 0;
+        if (existing.exists()) {
+            const data = existing.val();
+            currentBest = data.assertividade || 0;
+            attempts = data.attempts || 0;
+        }
+
+        const newData = {
+            assertividade: Math.max(currentBest, assertividade),
+            tma: tma, // Store latest TMA
+            passed: passed || (Math.max(currentBest, assertividade) >= 80),
+            attempts: attempts + 1,
+            lastAttempt: Date.now()
+        };
+
+        return ref.set(newData);
+    },
+
+    getUserResults: async function(fbKey) {
+        if (!fbKey) return {};
+        const snap = await database.ref(`results/${fbKey}`).once('value');
+        return snap.exists() ? snap.val() : {};
+    },
+
     // --- Backup & Restore ---
     exportDatabase: async function() {
         const categories = await this.getAllCategories();
@@ -211,7 +247,7 @@ const AUTH = {
         if (snap.exists()) {
             let data = null;
             snap.forEach(c => { data = c.val(); });
-            return { ok: true, role: 'colaborador', nome: data.nomeCompleto };
+            return { ok: true, role: 'colaborador', nome: data.nomeCompleto, fbKey: data.fbKey };
         }
         return { ok: false };
     },
@@ -254,8 +290,8 @@ const AUTH = {
 const SESSION = {
     TIMEOUT: 30 * 60 * 1000,
 
-    save: function(codigo, role, nome) {
-        sessionStorage.setItem('userSession', JSON.stringify({ codigo, role, nome, lastActivity: Date.now() }));
+    save: function(codigo, role, nome, fbKey) {
+        sessionStorage.setItem('userSession', JSON.stringify({ codigo, role, nome, fbKey, lastActivity: Date.now() }));
     },
     get: function() {
         try { return JSON.parse(sessionStorage.getItem('userSession')); } catch { return null; }

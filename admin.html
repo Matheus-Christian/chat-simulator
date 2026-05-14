@@ -195,6 +195,14 @@
                     <label>Título</label>
                     <input type="text" id="scen-title" placeholder="Ex: Nível Fácil">
                 </div>
+                <div class="form-group">
+                    <label>Nível</label>
+                    <select id="scen-nivel">
+                        <option value="1">1 - Fácil</option>
+                        <option value="2">2 - Médio</option>
+                        <option value="3">3 - Difícil</option>
+                    </select>
+                </div>
             </div>
             
             <div class="steps-header">
@@ -235,6 +243,21 @@
             <div class="modal-buttons">
                 <button id="btn-save-colab" class="primary-btn">Salvar</button>
                 <button class="secondary-btn btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Relatório de Colaborador -->
+    <div id="modal-report" class="modal hidden">
+        <div class="modal-content large" style="max-height: 90vh; overflow-y: auto;">
+            <h2 id="modal-report-title">Relatório de Desempenho</h2>
+            <p id="report-colab-name" style="margin-top:-10px; margin-bottom: 20px; color: #666;"></p>
+            
+            <div id="report-container">
+                <!-- Relatório dinâmico inserido aqui -->
+            </div>
+            
+            <div class="modal-buttons margin-top">
+                <button class="secondary-btn btn-cancel">Fechar</button>
             </div>
         </div>
     </div>

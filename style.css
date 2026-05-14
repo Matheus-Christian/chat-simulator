@@ -199,6 +199,15 @@ body {
     background-color: var(--bg-search);
 }
 
+.chat-item.locked {
+    cursor: not-allowed;
+    background-color: transparent !important;
+}
+
+.chat-item.locked:hover {
+    background-color: transparent !important;
+}
+
 .chat-item-info {
     flex: 1;
     display: flex;

@@ -8,6 +8,8 @@ let tmaInterval = null;
 let startTime = null;
 let soundEnabled = true;
 let isMobileMode = window.innerWidth <= 768;
+let currentUser = null;
+let userResults = {};
 
 // --- Local Storage Ranking ---
 function getHistory() {
@@ -247,7 +249,18 @@ const kpiProtocol = document.getElementById('kpi-protocol');
 
 // --- Initialization ---
 async function init() {
+    currentUser = SESSION.get();
+    if (!currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
     await DB.init();
+    
+    if (currentUser.role !== 'admin' && currentUser.fbKey) {
+        userResults = await DB.getUserResults(currentUser.fbKey) || {};
+    }
+
     updateRankingUI();
     await renderChatList();
     setupEventListeners();
@@ -365,22 +378,61 @@ async function renderChatList() {
             group.classList.toggle('collapsed');
         };
         
-        categories[cat].forEach(scenario => {
-            const item = document.createElement('div');
-            item.className = 'chat-item unread';
-            item.id = `chat-${scenario.uniqueId}`;
-            item.onclick = (e) => startChat(scenario, item);
+        // --- Calculate Locking Logic ---
+        // 1. Group scenarios by level
+        const scensByLevel = { 1: [], 2: [], 3: [] };
+        categories[cat].forEach(s => {
+            const nivel = parseInt(s.nivel) || 1;
+            scensByLevel[nivel].push(s);
+        });
+
+        // 2. Check if user passed all in a level
+        const passedAllLevel = (lvl) => {
+            if (currentUser.role === 'admin') return true;
+            if (scensByLevel[lvl].length === 0) return true; // if no scenarios in that level, auto pass
             
+            const catResults = userResults[safeKey(cat)] || {};
+            return scensByLevel[lvl].every(s => {
+                const sRes = catResults[safeKey(s.id)];
+                return sRes && sRes.passed === true;
+            });
+        };
+
+        const canAccessLevel2 = passedAllLevel(1);
+        const canAccessLevel3 = canAccessLevel2 && passedAllLevel(2);
+
+        categories[cat].forEach(scenario => {
+            const nivel = parseInt(scenario.nivel) || 1;
+            let isLocked = false;
+            if (nivel === 2 && !canAccessLevel2) isLocked = true;
+            if (nivel === 3 && !canAccessLevel3) isLocked = true;
+
+            const item = document.createElement('div');
+            item.className = 'chat-item ' + (isLocked ? 'locked' : 'unread');
+            item.id = `chat-${scenario.uniqueId}`;
+            
+            item.onclick = (e) => {
+                if (isLocked) {
+                    alert('Este cenário está bloqueado. Conclua os níveis anteriores desta categoria com pelo menos 80% de assertividade.');
+                    return;
+                }
+                startChat(scenario, item);
+            };
+            
+            const nivelStr = nivel === 3 ? 'Difícil' : (nivel === 2 ? 'Médio' : 'Fácil');
+            const nivelColor = nivel === 3 ? '#e74c3c' : (nivel === 2 ? '#f39c12' : '#2ecc71');
+            const lockIcon = isLocked ? `<i class="ph ph-lock" style="color:#e74c3c; margin-right:5px;"></i>` : '';
+
             item.innerHTML = `
-                <img src="${scenario.avatar}" alt="Avatar" class="avatar">
-                <div class="chat-item-info">
+                <img src="${scenario.avatar}" alt="Avatar" class="avatar" style="${isLocked ? 'opacity:0.5;' : ''}">
+                <div class="chat-item-info" style="${isLocked ? 'opacity:0.5;' : ''}">
                     <div class="chat-item-top">
-                        <span class="chat-item-name">${scenario.clientName}</span>
+                        <span class="chat-item-name">${lockIcon}${scenario.clientName}</span>
                         <span class="chat-item-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div class="chat-item-last" style="display:flex; justify-content:space-between;">
+                    <div class="chat-item-last" style="display:flex; justify-content:space-between; align-items:center;">
                         <span>${scenario.title}</span>
-                        <span class="unread-badge">NOVO</span>
+                        <span class="badge" style="background:${nivelColor}; font-size:0.6rem;">${nivelStr}</span>
                     </div>
                 </div>
             `;
@@ -648,6 +700,29 @@ function showResults() {
     levelEl.textContent = `Nível: ${levelName}`;
     
     saveHistory({ score, accuracy, date: new Date().toISOString() });
+    
+    if (currentUser && currentUser.role !== 'admin' && currentUser.fbKey && currentScenario) {
+        const passed = accuracy >= 80;
+        DB.saveResult(currentUser.fbKey, currentScenario.category, currentScenario.id, accuracy, kpiTma.textContent, passed).then(() => {
+            // Update local state so it unlocks immediately without refresh
+            if (!userResults[safeKey(currentScenario.category)]) {
+                userResults[safeKey(currentScenario.category)] = {};
+            }
+            const existing = userResults[safeKey(currentScenario.category)][safeKey(currentScenario.id)];
+            let bestAcc = accuracy;
+            let attempts = 1;
+            if (existing) {
+                bestAcc = Math.max(existing.assertividade || 0, accuracy);
+                attempts = (existing.attempts || 0) + 1;
+            }
+            userResults[safeKey(currentScenario.category)][safeKey(currentScenario.id)] = {
+                assertividade: bestAcc,
+                passed: passed || (existing && existing.passed),
+                tma: kpiTma.textContent,
+                attempts: attempts
+            };
+        });
+    }
     
     resultModal.style.display = 'flex';
 }

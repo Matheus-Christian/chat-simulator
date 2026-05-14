@@ -241,8 +241,11 @@ async function renderScenarios() {
     scens.forEach(scen => {
         const div = document.createElement('div');
         div.className = 'scenario-card';
+        const nivelStr = scen.nivel == 3 ? 'Difícil' : (scen.nivel == 2 ? 'Médio' : 'Fácil');
+        const nivelColor = scen.nivel == 3 ? '#e74c3c' : (scen.nivel == 2 ? '#f39c12' : '#2ecc71');
         div.innerHTML = `
             <span class="badge">${scen.category}</span>
+            <span class="badge" style="background:${nivelColor}; margin-left:5px;">Nível ${nivelStr}</span>
             <h3>${scen.title}</h3>
             <p style="color:#666; font-size:0.8rem; margin-bottom:1rem;">ID: ${scen.id} | Passos: ${Object.keys(scen.steps).length}</p>
             <div style="display:flex; gap:0.5rem; margin-top:auto;">
@@ -269,6 +272,7 @@ document.getElementById('btn-new-scenario').addEventListener('click', () => {
     document.getElementById('scen-id').value = '';
     document.getElementById('scen-id').disabled = false;
     document.getElementById('scen-title').value = '';
+    document.getElementById('scen-nivel').value = '1';
     currentSteps = {
         'start': {
             clientMessage: '',
@@ -288,6 +292,7 @@ window.editScenario = async (id) => {
     document.getElementById('scen-id').disabled = true; // Prevent changing ID
     document.getElementById('scen-category').value = scen.category;
     document.getElementById('scen-title').value = scen.title;
+    document.getElementById('scen-nivel').value = scen.nivel || "1";
     currentSteps = JSON.parse(JSON.stringify(scen.steps)); // Deep copy
     renderStepsEditor();
     document.getElementById('modal-scenario').classList.remove('hidden');
@@ -411,6 +416,7 @@ document.getElementById('btn-save-scen').addEventListener('click', async () => {
         id: id,
         category: document.getElementById('scen-category').value,
         title: document.getElementById('scen-title').value,
+        nivel: document.getElementById('scen-nivel').value,
         steps: currentSteps
     };
     
@@ -419,6 +425,59 @@ document.getElementById('btn-save-scen').addEventListener('click', async () => {
     await renderScenarios();
     await refreshDashboard();
 });
+
+window.openReportModal = async function(fbKey, nome) {
+    document.getElementById('report-colab-name').textContent = nome;
+    const container = document.getElementById('report-container');
+    container.innerHTML = '<p>Carregando resultados...</p>';
+    document.getElementById('modal-report').classList.remove('hidden');
+
+    try {
+        const results = await DB.getUserResults(fbKey);
+        // results is { categoryName: { scenarioId: { assertividade, passed, attempts, tma } } }
+        
+        if (!results || Object.keys(results).length === 0) {
+            container.innerHTML = '<p style="color:#666;">Nenhuma simulação registrada para este colaborador.</p>';
+            return;
+        }
+
+        let html = '';
+        for (const [categoryName, scenResults] of Object.entries(results)) {
+            html += `<h3 style="margin-top: 15px; margin-bottom: 10px; color: var(--primary-color); border-bottom: 1px solid #ddd; padding-bottom: 5px;">${categoryName}</h3>`;
+            html += `<table class="dashboard-table" style="margin-bottom: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Cenário (ID)</th>
+                                <th>Assertividade</th>
+                                <th>TMA</th>
+                                <th>Status</th>
+                                <th>Tentativas</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            for (const [scenarioId, data] of Object.entries(scenResults)) {
+                const badgeClass = data.passed ? 'badge' : 'badge';
+                const badgeStyle = data.passed ? 'background:#2ecc71;' : 'background:#e74c3c;';
+                const statusTxt = data.passed ? 'Aprovado' : 'Reprovado';
+                
+                html += `<tr>
+                            <td>${scenarioId}</td>
+                            <td><strong>${Math.round(data.assertividade)}%</strong></td>
+                            <td>${data.tma || 'N/A'}</td>
+                            <td><span class="${badgeClass}" style="${badgeStyle}">${statusTxt}</span></td>
+                            <td>${data.attempts || 1}</td>
+                         </tr>`;
+            }
+            html += `</tbody></table>`;
+        }
+
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = '<p style="color:var(--danger-color);">Erro ao carregar os dados.</p>';
+        console.error(e);
+    }
+};
 
 // --- Modal Utils ---
 document.querySelectorAll('.btn-cancel').forEach(btn => {
@@ -513,8 +572,9 @@ async function renderColaboradores() {
                 <td>${dataNasc}</td>
                 <td>${criadoEm}</td>
                 <td style="white-space:nowrap;">
-                    <button class="primary-btn small" onclick="openColabModal('${fbKey}')"><i class="ph ph-pencil"></i></button>
-                    <button class="danger-btn" style="margin-left:4px;" onclick="deleteColab('${fbKey}','${nomeEsc}')"><i class="ph ph-trash"></i></button>
+                    <button class="primary-btn small" onclick="openColabModal('${matEsc}')" title="Editar"><i class="ph ph-pencil"></i></button>
+                    <button class="secondary-btn small" style="margin-left:4px;" onclick="openReportModal('${matEsc}','${nomeEsc}')" title="Relatório"><i class="ph ph-chart-bar"></i></button>
+                    <button class="danger-btn small" style="margin-left:4px;" onclick="deleteColab('${matEsc}','${nomeEsc}')" title="Excluir"><i class="ph ph-trash"></i></button>
                 </td>`;
             tbody.appendChild(tr);
         } catch (rowErr) {

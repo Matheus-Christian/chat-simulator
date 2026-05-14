@@ -76,7 +76,7 @@ btnStartSim.addEventListener('click', async () => {
         return;
     }
 
-    SESSION.save(codigo, result.role, result.nome);
+    SESSION.save(codigo, result.role, result.nome, result.fbKey);
 
     const introScreen   = document.getElementById('intro-screen');
     const mainNav       = document.getElementById('main-nav');
