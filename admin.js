@@ -71,6 +71,9 @@ navs.forEach(nav => {
         // Update section
         document.querySelectorAll('.admin-section').forEach(sec => sec.classList.add('hidden'));
         document.getElementById(`sec-${nav}`).classList.remove('hidden');
+        // Refresh section data when switching tabs
+        if (nav === 'colaboradores') renderColaboradores();
+        if (nav === 'dashboard') refreshDashboard();
     });
 });
 
@@ -460,18 +463,32 @@ document.getElementById('import-file').addEventListener('change', (e) => {
 });
 // --- Colaboradores ---
 async function renderColaboradores() {
-    const colabs = await AUTH.getAllColaboradores();
     const tbody  = document.getElementById('colaboradores-tbody');
     const empty  = document.getElementById('colaboradores-empty');
+    const table  = document.getElementById('colaboradores-table');
+
     tbody.innerHTML = '';
 
-    if (colabs.length === 0) {
+    let colabs;
+    try {
+        colabs = await AUTH.getAllColaboradores();
+    } catch (err) {
+        console.error('[renderColaboradores] Erro ao carregar colaboradores:', err);
+        empty.textContent = 'Erro ao carregar colaboradores. Verifique as regras do Firebase.';
         empty.style.display = 'flex';
-        document.getElementById('colaboradores-table').style.display = 'none';
+        table.style.display = 'none';
         return;
     }
+
+    if (!colabs || colabs.length === 0) {
+        empty.innerHTML = '<i class="ph ph-users"></i> Nenhum colaborador cadastrado ainda.';
+        empty.style.display = 'flex';
+        table.style.display = 'none';
+        return;
+    }
+
     empty.style.display = 'none';
-    document.getElementById('colaboradores-table').style.display = '';
+    table.style.display = '';
 
     colabs.forEach(c => {
         const tr = document.createElement('tr');
@@ -572,9 +589,3 @@ window.deleteColab = async function(matricula, nome) {
 };
 
 document.getElementById('btn-refresh-colaboradores').addEventListener('click', renderColaboradores);
-
-// Botão novo colaborador na seção
-document.getElementById('nav-colaboradores').addEventListener('click', () => {
-    // já tratado pelo navs.forEach acima, mas garantimos refresh
-    renderColaboradores();
-});
