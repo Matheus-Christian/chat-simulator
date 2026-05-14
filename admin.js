@@ -472,9 +472,10 @@ async function renderColaboradores() {
     let colabs;
     try {
         colabs = await AUTH.getAllColaboradores();
+        console.log('[renderColaboradores] Total retornado:', colabs.length, colabs);
     } catch (err) {
-        console.error('[renderColaboradores] Erro ao carregar colaboradores:', err);
-        empty.textContent = 'Erro ao carregar colaboradores. Verifique as regras do Firebase.';
+        console.error('[renderColaboradores] Erro Firebase:', err);
+        empty.innerHTML = '<i class="ph ph-warning"></i> Erro ao carregar. Verifique as regras do Firebase.';
         empty.style.display = 'flex';
         table.style.display = 'none';
         return;
@@ -490,38 +491,51 @@ async function renderColaboradores() {
     empty.style.display = 'none';
     table.style.display = '';
 
-    colabs.forEach(c => {
-        const tr = document.createElement('tr');
-        const dataNasc = c.dataNascimento ? c.dataNascimento.split('-').reverse().join('/') : '-';
-        const criadoEm = c.criadoEm ? new Date(c.criadoEm).toLocaleDateString('pt-BR') : '-';
-        tr.innerHTML = `
-            <td>${c.nomeCompleto}</td>
-            <td>${c.matricula}</td>
-            <td><code>${c.codigoIdentificacao}</code></td>
-            <td>${dataNasc}</td>
-            <td>${criadoEm}</td>
-            <td style="white-space:nowrap;">
-                <button class="primary-btn small" onclick="openColabModal('${c.matricula}')"><i class="ph ph-pencil"></i></button>
-                <button class="danger-btn" style="margin-left:4px;" onclick="deleteColab('${c.matricula}', '${c.nomeCompleto}')"><i class="ph ph-trash"></i></button>
-            </td>
-        `;
-        tbody.appendChild(tr);
+    colabs.forEach((c, idx) => {
+        try {
+            const tr = document.createElement('tr');
+            const nome      = c.nomeCompleto        || '—';
+            const matricula = c.matricula           || '—';
+            const codigo    = c.codigoIdentificacao || '—';
+            const dataNasc  = c.dataNascimento
+                ? c.dataNascimento.split('-').reverse().join('/') : '-';
+            const criadoEm  = c.criadoEm
+                ? new Date(c.criadoEm).toLocaleDateString('pt-BR') : '-';
+            // Escape single quotes para não quebrar atributos onclick
+            const matEsc  = String(matricula).replace(/'/g, "\\'");
+            const nomeEsc = String(nome).replace(/'/g, "\\'");
+            const fbKey   = String(c.fbKey || c.codigoIdentificacao || matricula).replace(/'/g, "\\'");
+
+            tr.innerHTML = `
+                <td>${nome}</td>
+                <td>${matricula}</td>
+                <td><code>${codigo}</code></td>
+                <td>${dataNasc}</td>
+                <td>${criadoEm}</td>
+                <td style="white-space:nowrap;">
+                    <button class="primary-btn small" onclick="openColabModal('${fbKey}')"><i class="ph ph-pencil"></i></button>
+                    <button class="danger-btn" style="margin-left:4px;" onclick="deleteColab('${fbKey}','${nomeEsc}')"><i class="ph ph-trash"></i></button>
+                </td>`;
+            tbody.appendChild(tr);
+        } catch (rowErr) {
+            console.error(`[renderColaboradores] Erro ao renderizar linha ${idx}:`, rowErr, c);
+        }
     });
 }
 
-function openColabModal(matriculaEditar) {
+function openColabModal(fbKey) {
     document.getElementById('colab-error').textContent = '';
     document.getElementById('colab-codigo-preview').value = '';
 
-    if (matriculaEditar) {
+    if (fbKey) {
         AUTH.getAllColaboradores().then(colabs => {
-            const c = colabs.find(x => x.matricula === matriculaEditar);
+            const c = colabs.find(x => (x.fbKey || x.codigoIdentificacao) === fbKey);
             if (!c) return;
             document.getElementById('modal-colab-title').textContent = 'Editar Colaborador';
             document.getElementById('colab-nome').value = c.nomeCompleto;
             document.getElementById('colab-nasc').value = c.dataNascimento;
             document.getElementById('colab-matricula').value = c.matricula;
-            document.getElementById('colab-matricula-original').value = c.matricula;
+            document.getElementById('colab-matricula-original').value = fbKey; // stores fbKey
             document.getElementById('colab-codigo-preview').value = c.codigoIdentificacao;
             document.getElementById('modal-colaborador').classList.remove('hidden');
         });
@@ -564,6 +578,7 @@ document.getElementById('btn-save-colab').addEventListener('click', async () => 
 
     let result;
     if (matOrig) {
+        // matOrig agora é o fbKey (código original)
         result = await AUTH.updateColaborador(matOrig, { nomeCompleto: nome, dataNascimento: nasc, matricula: mat });
     } else {
         result = await AUTH.addColaborador({ nomeCompleto: nome, dataNascimento: nasc, matricula: mat });
@@ -581,9 +596,9 @@ document.getElementById('btn-save-colab').addEventListener('click', async () => 
 
 window.openColabModal = openColabModal;
 
-window.deleteColab = async function(matricula, nome) {
+window.deleteColab = async function(fbKey, nome) {
     if (!confirm(`Excluir o colaborador "${nome}"? Esta ação não pode ser desfeita.`)) return;
-    await AUTH.deleteColaborador(matricula);
+    await AUTH.deleteColaborador(fbKey);
     await renderColaboradores();
     await refreshDashboard();
 };

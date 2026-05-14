@@ -106,7 +106,7 @@ btnStartSim.addEventListener('click', async () => {
 });
 
 // ─── Modal: Recuperar Acesso ──────────────────────────────────────────────────
-let recMatriculaAtual = null;
+let recFbKeyAtual = null;
 
 document.getElementById('btn-rec-submit').addEventListener('click', async () => {
     const dataNascimento = document.getElementById('rec-nasc').value;
@@ -120,7 +120,7 @@ document.getElementById('btn-rec-submit').addEventListener('click', async () => 
     errorEl.textContent     = '';
     successEl.style.display = 'none';
     changeEl.style.display  = 'none';
-    recMatriculaAtual       = null;
+    recFbKeyAtual           = null;
 
     if (!dataNascimento || !matricula || !chave) { errorEl.textContent = 'Preencha todos os campos.'; return; }
     if (chave !== AUTH.PALAVRA_CHAVE) { errorEl.textContent = 'Palavra-chave incorreta.'; return; }
@@ -139,7 +139,7 @@ document.getElementById('btn-rec-submit').addEventListener('click', async () => 
 
     document.getElementById('rec-codigo-display').textContent = result.codigo;
     successEl.style.display = 'flex';
-    recMatriculaAtual = result.matricula;
+    recFbKeyAtual = result.fbKey;
     changeEl.style.display = 'block';
 
     const infoEl = document.getElementById('rec-change-info');
@@ -162,13 +162,13 @@ document.getElementById('btn-rec-change').addEventListener('click', async () => 
 
     errorEl.textContent = '';
     if (!novoCodigo || novoCodigo.length < 4) { errorEl.textContent = 'O novo código deve ter pelo menos 4 caracteres.'; return; }
-    if (!recMatriculaAtual) { errorEl.textContent = 'Erro inesperado. Recarregue e tente novamente.'; return; }
+    if (!recFbKeyAtual) { errorEl.textContent = 'Erro inesperado. Recarregue e tente novamente.'; return; }
 
     btn.disabled = true;
     btn.textContent = 'Alterando...';
 
     let result;
-    try { result = await AUTH.changeColaboradorCodigo({ matricula: recMatriculaAtual, novoCodigo }); }
+    try { result = await AUTH.changeColaboradorCodigo({ fbKey: recFbKeyAtual, novoCodigo }); }
     catch (err) { errorEl.textContent = 'Erro ao conectar. Tente novamente.'; btn.disabled = false; btn.textContent = 'Confirmar Alteração'; return; }
 
     btn.disabled = false;

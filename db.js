@@ -137,69 +137,77 @@ const AUTH = {
 
     PALAVRA_CHAVE: '$ebrateL2026',
 
-    // Gera chave Firebase segura e única a partir da matrícula
-    _key: function(matricula) {
-        return 'M_' + String(matricula).trim().replace(/[^a-zA-Z0-9]/g, '_');
+    // Chave Firebase = primeiroNome + matrícula, normalizado (sem acentos, só alfanumérico)
+    // Ex: "Mancer1409", "Lacta1410" — mesmo formato que sempre funcionou
+    _key: function(nomeCompleto, matricula) {
+        const primeiro = nomeCompleto.trim().split(' ')[0];
+        return `${primeiro}${String(matricula).trim()}`
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]/g, '');
     },
 
     // Admin cria colaborador
     addColaborador: async function({ nomeCompleto, dataNascimento, matricula }) {
-        const key = this._key(matricula);
-        const ref = database.ref(`users/colaboradores/${key}`);
-        const existing = await ref.once('value');
-        if (existing.exists()) return { ok: false, error: 'Matrícula já cadastrada.' };
+        // Bloqueia matrícula duplicada
+        const matSnap = await database.ref('users/colaboradores')
+            .orderByChild('matricula').equalTo(matricula.trim()).once('value');
+        if (matSnap.exists()) return { ok: false, error: 'Matrícula já cadastrada.' };
 
-        const primeiroNome = nomeCompleto.trim().split(' ')[0];
-        const codigo = `${primeiroNome}${matricula.trim()}`;
+        const key = this._key(nomeCompleto, matricula);
+        const ref = database.ref(`users/colaboradores/${key}`);
+        if ((await ref.once('value')).exists())
+            return { ok: false, error: 'Código de identificação já existe. Tente outro nome.' };
+
         await ref.set({
             nomeCompleto: nomeCompleto.trim(),
             dataNascimento: dataNascimento.trim(),
             matricula: matricula.trim(),
-            codigoIdentificacao: codigo,
+            codigoIdentificacao: key,
+            fbKey: key,
             codigoAlterado: false,
             criadoEm: Date.now()
         });
-        return { ok: true, codigo };
+        return { ok: true, codigo: key };
     },
 
-    // Admin edita colaborador
-    updateColaborador: async function(matriculaOriginal, { nomeCompleto, dataNascimento, matricula }) {
-        const oldKey = this._key(matriculaOriginal);
-        const newKey = this._key(matricula);
-        const oldRef = database.ref(`users/colaboradores/${oldKey}`);
+    // Admin edita colaborador (usa fbKey armazenado)
+    updateColaborador: async function(fbKey, { nomeCompleto, dataNascimento, matricula }) {
+        const oldRef = database.ref(`users/colaboradores/${fbKey}`);
         const oldSnap = await oldRef.once('value');
         if (!oldSnap.exists()) return { ok: false, error: 'Colaborador não encontrado.' };
+        const oldData = oldSnap.val();
 
-        const primeiroNome = nomeCompleto.trim().split(' ')[0];
-        const codigo = `${primeiroNome}${matricula.trim()}`;
+        const newKey = this._key(nomeCompleto, matricula);
 
-        if (oldKey !== newKey) {
+        if (fbKey !== newKey) {
             const newRef = database.ref(`users/colaboradores/${newKey}`);
-            if ((await newRef.once('value')).exists()) return { ok: false, error: 'Nova matrícula já cadastrada.' };
-            const old = oldSnap.val();
+            if ((await newRef.once('value')).exists())
+                return { ok: false, error: 'Novo código já existe.' };
             await oldRef.remove();
-            await newRef.set({ ...old, nomeCompleto: nomeCompleto.trim(), dataNascimento: dataNascimento.trim(), matricula: matricula.trim(), codigoIdentificacao: codigo });
+            await newRef.set({ ...oldData, nomeCompleto: nomeCompleto.trim(),
+                dataNascimento: dataNascimento.trim(), matricula: matricula.trim(),
+                codigoIdentificacao: newKey, fbKey: newKey });
         } else {
-            await oldRef.update({ nomeCompleto: nomeCompleto.trim(), dataNascimento: dataNascimento.trim(), codigoIdentificacao: codigo });
+            await oldRef.update({ nomeCompleto: nomeCompleto.trim(),
+                dataNascimento: dataNascimento.trim() });
         }
         return { ok: true };
     },
 
-    // Admin exclui colaborador
-    deleteColaborador: async function(matricula) {
-        await database.ref(`users/colaboradores/${this._key(matricula)}`).remove();
+    // Admin exclui (usa fbKey)
+    deleteColaborador: async function(fbKey) {
+        await database.ref(`users/colaboradores/${fbKey}`).remove();
         return { ok: true };
     },
 
-    // Valida login pelo codigoIdentificacao (query por campo)
+    // Valida login pelo campo codigoIdentificacao
     validateCodigo: async function(codigo) {
-        if (codigo.trim() === ADMIN_PASS) {
+        if (codigo.trim() === ADMIN_PASS)
             return { ok: true, role: 'admin', nome: 'Administrador' };
-        }
+
         const snap = await database.ref('users/colaboradores')
-            .orderByChild('codigoIdentificacao')
-            .equalTo(codigo.trim())
-            .once('value');
+            .orderByChild('codigoIdentificacao').equalTo(codigo.trim()).once('value');
         if (snap.exists()) {
             let data = null;
             snap.forEach(c => { data = c.val(); });
@@ -208,27 +216,27 @@ const AUTH = {
         return { ok: false };
     },
 
-    // Recupera código por data de nascimento + matrícula
+    // Recupera código por nascimento + matrícula
     recoverCodigo: async function({ dataNascimento, matricula }) {
-        const snap = await database.ref(`users/colaboradores/${this._key(matricula)}`).once('value');
+        const snap = await database.ref('users/colaboradores')
+            .orderByChild('matricula').equalTo(matricula.trim()).once('value');
         if (!snap.exists()) return { ok: false };
-        const data = snap.val();
-        if (data.dataNascimento === dataNascimento.trim()) {
-            return { ok: true, codigo: data.codigoIdentificacao, codigoAlterado: data.codigoAlterado || false, matricula: data.matricula };
-        }
-        return { ok: false };
+        let found = null;
+        snap.forEach(c => { if (c.val().dataNascimento === dataNascimento.trim()) found = c.val(); });
+        if (!found) return { ok: false };
+        return { ok: true, codigo: found.codigoIdentificacao,
+            codigoAlterado: found.codigoAlterado || false, fbKey: found.fbKey || found.codigoIdentificacao };
     },
 
-    // Altera código — somente uma vez
-    changeColaboradorCodigo: async function({ matricula, novoCodigo }) {
-        const ref = database.ref(`users/colaboradores/${this._key(matricula)}`);
+    // Altera código (somente uma vez) — usa fbKey
+    changeColaboradorCodigo: async function({ fbKey, novoCodigo }) {
+        const ref = database.ref(`users/colaboradores/${fbKey}`);
         const snap = await ref.once('value');
         if (!snap.exists()) return { ok: false, error: 'Colaborador não encontrado.' };
-        if (snap.val().codigoAlterado) return { ok: false, error: 'O código já foi alterado. Solicite ao supervisor para redefini-lo.' };
-
-        const check = await database.ref('users/colaboradores').orderByChild('codigoIdentificacao').equalTo(novoCodigo.trim()).once('value');
-        if (check.exists()) return { ok: false, error: 'Este código já está em uso. Escolha outro.' };
-
+        if (snap.val().codigoAlterado) return { ok: false, error: 'Código já alterado. Solicite ao supervisor.' };
+        const check = await database.ref('users/colaboradores')
+            .orderByChild('codigoIdentificacao').equalTo(novoCodigo.trim()).once('value');
+        if (check.exists()) return { ok: false, error: 'Código já em uso. Escolha outro.' };
         await ref.update({ codigoIdentificacao: novoCodigo.trim(), codigoAlterado: true });
         return { ok: true };
     },
@@ -240,6 +248,7 @@ const AUTH = {
         return result;
     }
 };
+
 
 // ─── Sessão ───────────────────────────────────────────────────────────────────
 const SESSION = {
@@ -261,3 +270,5 @@ const SESSION = {
     },
     clear: function() { sessionStorage.removeItem('userSession'); }
 };
+
+
