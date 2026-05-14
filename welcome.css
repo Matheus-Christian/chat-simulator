@@ -573,6 +573,113 @@ body {
     text-align: left;
 }
 
+/* ─── Info block (Primeiro Acesso) ───────────────────────────────────────── */
+.auth-info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f6ff;
+    border: 1px solid #bfd7ff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 4px;
+}
+
+.auth-info-block > i {
+    font-size: 1.4rem;
+    color: #2563eb;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.auth-info-block p {
+    font-size: 0.87rem;
+    color: #1e3a6e;
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+
+.auth-info-block p:last-child { margin-bottom: 0; }
+
+.auth-info-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0;
+}
+
+.auth-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.auth-step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ─── Alterar código (Recuperar Acesso) ──────────────────────────────────── */
+.auth-change-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 10px;
+}
+
+.auth-change-divider::before,
+.auth-change-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.auth-change-divider span {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.auth-change-info {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.auth-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: #7c5308;
+}
+
+.auth-warning i {
+    font-size: 1.1rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+
 /* ─── Auth Modais ─────────────────────────────────────────────────────────── */
 .auth-modal-overlay {
     position: fixed;

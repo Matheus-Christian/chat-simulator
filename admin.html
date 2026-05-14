@@ -113,7 +113,10 @@
                 <section id="sec-colaboradores" class="admin-section hidden">
                     <div class="section-header">
                         <h1>Colaboradores Cadastrados</h1>
-                        <button id="btn-refresh-colaboradores" class="primary-btn"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button id="btn-new-colaborador" class="primary-btn" onclick="openColabModal(null)"><i class="ph ph-plus"></i> Novo Colaborador</button>
+                            <button id="btn-refresh-colaboradores" class="primary-btn"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                        </div>
                     </div>
                     <div id="colaboradores-table-wrap">
                         <table class="colab-table" id="colaboradores-table">
@@ -124,6 +127,7 @@
                                     <th>Código de Identificação</th>
                                     <th>Nasc.</th>
                                     <th>Cadastrado em</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="colaboradores-tbody"></tbody>
@@ -201,6 +205,35 @@
 
             <div class="modal-buttons margin-top">
                 <button id="btn-save-scen" class="primary-btn">Salvar Cenário</button>
+                <button class="secondary-btn btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Colaborador -->
+    <div id="modal-colaborador" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modal-colab-title">Novo Colaborador</h2>
+            <div class="form-group">
+                <label>Nome Completo</label>
+                <input type="text" id="colab-nome" placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+                <label>Data de Nascimento</label>
+                <input type="date" id="colab-nasc">
+            </div>
+            <div class="form-group">
+                <label>Matrícula</label>
+                <input type="text" id="colab-matricula" placeholder="Matrícula fornecida pelo supervisor">
+                <input type="hidden" id="colab-matricula-original">
+            </div>
+            <div class="form-group">
+                <label>Código de Identificação (gerado automaticamente)</label>
+                <input type="text" id="colab-codigo-preview" readonly placeholder="Gerado após preencher nome e matrícula" style="background:#f0f0f0;color:#888;cursor:default;">
+            </div>
+            <p id="colab-error" style="color:var(--danger-color);font-size:0.88rem;min-height:18px;"></p>
+            <div class="modal-buttons">
+                <button id="btn-save-colab" class="primary-btn">Salvar</button>
                 <button class="secondary-btn btn-cancel">Cancelar</button>
             </div>
         </div>

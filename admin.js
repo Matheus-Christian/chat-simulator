@@ -1,6 +1,5 @@
-// Authentication
-const ADMIN_PASS = 'admin123'; // Senha simples para proteção
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos de inatividade
+// Authentication — ADMIN_PASS é declarado em db.js (carregado antes)
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
 function checkLoginState() {
     const loggedIn = sessionStorage.getItem('adminLoggedIn');
@@ -467,26 +466,115 @@ async function renderColaboradores() {
     tbody.innerHTML = '';
 
     if (colabs.length === 0) {
-        empty.style.display = 'block';
+        empty.style.display = 'flex';
+        document.getElementById('colaboradores-table').style.display = 'none';
         return;
     }
     empty.style.display = 'none';
+    document.getElementById('colaboradores-table').style.display = '';
 
     colabs.forEach(c => {
         const tr = document.createElement('tr');
-        const dataNasc = c.dataNascimento
-            ? c.dataNascimento.split('-').reverse().join('/') : '-';
-        const criadoEm = c.criadoEm
-            ? new Date(c.criadoEm).toLocaleDateString('pt-BR') : '-';
+        const dataNasc = c.dataNascimento ? c.dataNascimento.split('-').reverse().join('/') : '-';
+        const criadoEm = c.criadoEm ? new Date(c.criadoEm).toLocaleDateString('pt-BR') : '-';
         tr.innerHTML = `
             <td>${c.nomeCompleto}</td>
             <td>${c.matricula}</td>
             <td><code>${c.codigoIdentificacao}</code></td>
             <td>${dataNasc}</td>
             <td>${criadoEm}</td>
+            <td style="white-space:nowrap;">
+                <button class="primary-btn small" onclick="openColabModal('${c.matricula}')"><i class="ph ph-pencil"></i></button>
+                <button class="danger-btn" style="margin-left:4px;" onclick="deleteColab('${c.matricula}', '${c.nomeCompleto}')"><i class="ph ph-trash"></i></button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
+function openColabModal(matriculaEditar) {
+    document.getElementById('colab-error').textContent = '';
+    document.getElementById('colab-codigo-preview').value = '';
+
+    if (matriculaEditar) {
+        AUTH.getAllColaboradores().then(colabs => {
+            const c = colabs.find(x => x.matricula === matriculaEditar);
+            if (!c) return;
+            document.getElementById('modal-colab-title').textContent = 'Editar Colaborador';
+            document.getElementById('colab-nome').value = c.nomeCompleto;
+            document.getElementById('colab-nasc').value = c.dataNascimento;
+            document.getElementById('colab-matricula').value = c.matricula;
+            document.getElementById('colab-matricula-original').value = c.matricula;
+            document.getElementById('colab-codigo-preview').value = c.codigoIdentificacao;
+            document.getElementById('modal-colaborador').classList.remove('hidden');
+        });
+    } else {
+        document.getElementById('modal-colab-title').textContent = 'Novo Colaborador';
+        document.getElementById('colab-nome').value = '';
+        document.getElementById('colab-nasc').value = '';
+        document.getElementById('colab-matricula').value = '';
+        document.getElementById('colab-matricula-original').value = '';
+        document.getElementById('modal-colaborador').classList.remove('hidden');
+    }
+}
+
+// Preview do código ao digitar
+['colab-nome', 'colab-matricula'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+        const nome = document.getElementById('colab-nome').value.trim();
+        const mat  = document.getElementById('colab-matricula').value.trim();
+        if (nome && mat) {
+            document.getElementById('colab-codigo-preview').value = `${nome.split(' ')[0]}${mat}`;
+        } else {
+            document.getElementById('colab-codigo-preview').value = '';
+        }
+    });
+});
+
+document.getElementById('btn-save-colab').addEventListener('click', async () => {
+    const nome     = document.getElementById('colab-nome').value.trim();
+    const nasc     = document.getElementById('colab-nasc').value;
+    const mat      = document.getElementById('colab-matricula').value.trim();
+    const matOrig  = document.getElementById('colab-matricula-original').value;
+    const errorEl  = document.getElementById('colab-error');
+    const btn      = document.getElementById('btn-save-colab');
+
+    errorEl.textContent = '';
+    if (!nome || !nasc || !mat) { errorEl.textContent = 'Preencha todos os campos.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    let result;
+    if (matOrig) {
+        result = await AUTH.updateColaborador(matOrig, { nomeCompleto: nome, dataNascimento: nasc, matricula: mat });
+    } else {
+        result = await AUTH.addColaborador({ nomeCompleto: nome, dataNascimento: nasc, matricula: mat });
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+
+    if (!result.ok) { errorEl.textContent = result.error; return; }
+
+    document.getElementById('modal-colaborador').classList.add('hidden');
+    await renderColaboradores();
+    await refreshDashboard();
+});
+
+window.openColabModal = openColabModal;
+
+window.deleteColab = async function(matricula, nome) {
+    if (!confirm(`Excluir o colaborador "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    await AUTH.deleteColaborador(matricula);
+    await renderColaboradores();
+    await refreshDashboard();
+};
+
 document.getElementById('btn-refresh-colaboradores').addEventListener('click', renderColaboradores);
+
+// Botão novo colaborador na seção
+document.getElementById('nav-colaboradores').addEventListener('click', () => {
+    // já tratado pelo navs.forEach acima, mas garantimos refresh
+    renderColaboradores();
+});

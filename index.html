@@ -167,42 +167,37 @@
         </div>
     </footer>
 
-    <!-- Modal: Primeiro Acesso -->
     <div class="auth-modal-overlay" id="modal-primeiro-acesso" style="display:none;">
         <div class="auth-modal">
             <div class="auth-modal-header">
                 <div class="auth-modal-icon"><i class="ph ph-user-plus"></i></div>
                 <h2>Primeiro Acesso</h2>
-                <p>Preencha os dados abaixo para criar seu código de identificação.</p>
+                <p>Como obter seu código de identificação.</p>
                 <button class="auth-modal-close" onclick="closeModal('modal-primeiro-acesso')" id="btn-close-primeiro-acesso"><i class="ph ph-x"></i></button>
             </div>
             <div class="auth-modal-body">
-                <div class="auth-form-group">
-                    <label for="reg-nome"><i class="ph ph-user"></i> Nome Completo</label>
-                    <input type="text" id="reg-nome" placeholder="Seu nome completo" autocomplete="off">
-                </div>
-                <div class="auth-form-group">
-                    <label for="reg-nasc"><i class="ph ph-calendar"></i> Data de Nascimento</label>
-                    <input type="date" id="reg-nasc">
-                </div>
-                <div class="auth-form-group">
-                    <label for="reg-matricula"><i class="ph ph-identification-card"></i> Matrícula</label>
-                    <input type="text" id="reg-matricula" placeholder="Código fornecido pelo supervisor" autocomplete="off">
-                </div>
-                <div class="auth-form-group">
-                    <label for="reg-chave"><i class="ph ph-lock-key"></i> Palavra-chave</label>
-                    <input type="password" id="reg-chave" placeholder="Palavra-chave padrão">
-                </div>
-                <p class="auth-error" id="reg-error"></p>
-                <div class="auth-success" id="reg-success" style="display:none;">
-                    <i class="ph ph-check-circle"></i>
+                <div class="auth-info-block">
+                    <i class="ph ph-info"></i>
                     <div>
-                        <p>Cadastro realizado! Seu código de identificação é:</p>
-                        <p class="auth-codigo" id="reg-codigo-display"></p>
-                        <p class="auth-hint">Guarde este código. Você precisará dele para acessar o simulador.</p>
+                        <p><strong>O acesso ao simulador é criado pelo seu supervisor.</strong></p>
+                        <p>Solicite o seu <strong>código de identificação</strong> diretamente ao supervisor antes de iniciar o treinamento.</p>
                     </div>
                 </div>
-                <button class="auth-btn-primary" id="btn-reg-submit">Criar Acesso</button>
+                <div class="auth-info-steps">
+                    <div class="auth-step">
+                        <div class="auth-step-num">1</div>
+                        <span>Solicite o acesso ao seu supervisor</span>
+                    </div>
+                    <div class="auth-step">
+                        <div class="auth-step-num">2</div>
+                        <span>Receba seu <strong>código de identificação</strong> único</span>
+                    </div>
+                    <div class="auth-step">
+                        <div class="auth-step-num">3</div>
+                        <span>Digite o código no campo de identificação e inicie</span>
+                    </div>
+                </div>
+                <button class="auth-btn-primary" onclick="closeModal('modal-primeiro-acesso')">Entendido</button>
             </div>
         </div>
     </div>
@@ -213,7 +208,7 @@
             <div class="auth-modal-header">
                 <div class="auth-modal-icon"><i class="ph ph-key"></i></div>
                 <h2>Recuperar Acesso</h2>
-                <p>Informe seus dados para recuperar seu código de identificação.</p>
+                <p>Informe seus dados para recuperar seu código.</p>
                 <button class="auth-modal-close" onclick="closeModal('modal-recuperar-acesso')" id="btn-close-recuperar-acesso"><i class="ph ph-x"></i></button>
             </div>
             <div class="auth-modal-body">
@@ -235,6 +230,22 @@
                     <div>
                         <p>Seu código de identificação é:</p>
                         <p class="auth-codigo" id="rec-codigo-display"></p>
+                    </div>
+                </div>
+                <div id="rec-change-section" style="display:none;">
+                    <div class="auth-change-divider"><span>Alterar código de identificação</span></div>
+                    <p class="auth-change-info" id="rec-change-info"></p>
+                    <div id="rec-change-form" style="display:none;">
+                        <div class="auth-warning">
+                            <i class="ph ph-warning"></i>
+                            <span>Esta alteração pode ser feita <strong>somente uma vez</strong>.</span>
+                        </div>
+                        <div class="auth-form-group" style="margin-top:10px;">
+                            <label for="rec-novo-codigo"><i class="ph ph-pencil"></i> Novo Código</label>
+                            <input type="text" id="rec-novo-codigo" placeholder="Mínimo 4 caracteres" autocomplete="off">
+                        </div>
+                        <p class="auth-error" id="rec-change-error"></p>
+                        <button class="auth-btn-primary" id="btn-rec-change" style="margin-top:8px;">Confirmar Alteração</button>
                     </div>
                 </div>
                 <button class="auth-btn-primary" id="btn-rec-submit">Recuperar Código</button>
