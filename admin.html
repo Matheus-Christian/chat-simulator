@@ -113,7 +113,11 @@
                 <section id="sec-colaboradores" class="admin-section hidden">
                     <div class="section-header">
                         <h1>Colaboradores Cadastrados</h1>
-                        <div style="display:flex;gap:0.5rem;">
+                        <div style="display:flex;gap:0.5rem; align-items: center;">
+                            <div class="search-input-wrapper" style="background: white; border: 1px solid var(--border-color); height: 100%;">
+                                <i class="ph ph-magnifying-glass"></i>
+                                <input type="text" id="search-colab" placeholder="Buscar colaborador..." style="padding: 0.5rem; border: none; outline: none; background: transparent;">
+                            </div>
                             <button id="btn-new-colaborador" class="primary-btn" onclick="openColabModal(null)"><i class="ph ph-plus"></i> Novo Colaborador</button>
                             <button id="btn-refresh-colaboradores" class="primary-btn"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
                         </div>
@@ -250,7 +254,7 @@
     <div id="modal-report" class="modal hidden">
         <div class="modal-content large" style="max-height: 90vh; overflow-y: auto;">
             <h2 id="modal-report-title">Relatório de Desempenho</h2>
-            <p id="report-colab-name" style="margin-top:-10px; margin-bottom: 20px; color: #666;"></p>
+            <p id="report-colab-name" style="margin-top: 5px; margin-bottom: 20px; color: #666;"></p>
             
             <div id="report-container">
                 <!-- Relatório dinâmico inserido aqui -->

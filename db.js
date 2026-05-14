@@ -91,7 +91,7 @@ const DB = {
     },
     
     // --- Resultados ---
-    saveResult: async function(fbKey, categoryName, scenarioId, assertividade, tma, passed) {
+    saveResult: async function(fbKey, categoryName, scenarioId, assertividade, tma, passed, correctDecisions, totalDecisions) {
         if (!fbKey || fbKey === 'admin') return; // Do not save admin results
         
         const safeCat = safeKey(categoryName);
@@ -113,6 +113,8 @@ const DB = {
             assertividade: Math.max(currentBest, assertividade),
             tma: tma, // Store latest TMA
             passed: passed || (Math.max(currentBest, assertividade) >= 80),
+            correctDecisions: correctDecisions !== undefined ? correctDecisions : (existing.exists() ? existing.val().correctDecisions : 0),
+            totalDecisions: totalDecisions !== undefined ? totalDecisions : (existing.exists() ? existing.val().totalDecisions : 0),
             attempts: attempts + 1,
             lastAttempt: Date.now()
         };

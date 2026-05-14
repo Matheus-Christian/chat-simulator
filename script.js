@@ -703,7 +703,7 @@ function showResults() {
     
     if (currentUser && currentUser.role !== 'admin' && currentUser.fbKey && currentScenario) {
         const passed = accuracy >= 80;
-        DB.saveResult(currentUser.fbKey, currentScenario.category, currentScenario.id, accuracy, kpiTma.textContent, passed).then(() => {
+        DB.saveResult(currentUser.fbKey, currentScenario.category, currentScenario.id, accuracy, kpiTma.textContent, passed, correctDecisions, totalDecisions).then(() => {
             // Update local state so it unlocks immediately without refresh
             if (!userResults[safeKey(currentScenario.category)]) {
                 userResults[safeKey(currentScenario.category)] = {};
@@ -719,6 +719,8 @@ function showResults() {
                 assertividade: bestAcc,
                 passed: passed || (existing && existing.passed),
                 tma: kpiTma.textContent,
+                correctDecisions: correctDecisions,
+                totalDecisions: totalDecisions,
                 attempts: attempts
             };
         });
@@ -727,28 +729,7 @@ function showResults() {
     resultModal.style.display = 'flex';
 }
 
-function addSystemFooter() {
-    const sidebar = document.querySelector('.sidebar');
-    const footer = document.createElement('div');
-    footer.className = 'system-footer';
-    footer.style.padding = '10px';
-    footer.style.textAlign = 'center';
-    footer.style.fontSize = '11px';
-    footer.style.color = 'var(--text-muted)';
-    footer.style.borderTop = '1px solid var(--border-color)';
-    footer.style.backgroundColor = 'var(--bg-panel)';
-    footer.style.lineHeight = '1.5';
-    
-    footer.innerHTML = `
-        Versão do sistema: v1.1.0<br>
-        Última revisão de chats: 11/05/2026
-    `;
-    
-    sidebar.appendChild(footer);
-}
-
 init();
-addSystemFooter();
 
 // Auto-reload data when it changes in the cloud
 DB.onUpdate(() => {

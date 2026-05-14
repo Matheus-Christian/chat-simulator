@@ -434,6 +434,8 @@ window.openReportModal = async function(fbKey, nome) {
 
     try {
         const results = await DB.getUserResults(fbKey);
+        const allScenarios = await DB.getAllScenarios();
+        
         // results is { categoryName: { scenarioId: { assertividade, passed, attempts, tma } } }
         
         if (!results || Object.keys(results).length === 0) {
@@ -443,15 +445,18 @@ window.openReportModal = async function(fbKey, nome) {
 
         let html = '';
         for (const [categoryName, scenResults] of Object.entries(results)) {
-            html += `<h3 style="margin-top: 15px; margin-bottom: 10px; color: var(--primary-color); border-bottom: 1px solid #ddd; padding-bottom: 5px;">${categoryName}</h3>`;
-            html += `<table class="dashboard-table" style="margin-bottom: 15px;">
+            const decodedCatName = decodeURIComponent(categoryName);
+            html += `<h3 style="margin-top: 30px; margin-bottom: 10px; color: var(--primary-color); border-bottom: 1px solid #ddd; padding-bottom: 5px;">${decodedCatName}</h3>`;
+            html += `<table class="dashboard-table" style="margin-bottom: 15px; width: 100%; text-align: center; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th>Cenário (ID)</th>
-                                <th>Assertividade</th>
-                                <th>TMA</th>
-                                <th>Status</th>
-                                <th>Tentativas</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Cenário (ID)</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Nível</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Assertividade</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Decisões</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">TMA</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Status</th>
+                                <th style="padding: 8px; border-bottom: 1px solid #eee;">Tentativas</th>
                             </tr>
                         </thead>
                         <tbody>`;
@@ -461,12 +466,25 @@ window.openReportModal = async function(fbKey, nome) {
                 const badgeStyle = data.passed ? 'background:#2ecc71;' : 'background:#e74c3c;';
                 const statusTxt = data.passed ? 'Aprovado' : 'Reprovado';
                 
+                // Find level
+                const decodedScenId = decodeURIComponent(scenarioId);
+                const scen = allScenarios.find(s => safeKey(s.id) === scenarioId || s.id === decodedScenId);
+                const nivelVal = scen ? parseInt(scen.nivel) || 1 : 1;
+                const nivelStr = nivelVal === 3 ? 'Difícil' : (nivelVal === 2 ? 'Médio' : 'Fácil');
+                
+                let decisoesTxt = 'N/A';
+                if (data.totalDecisions !== undefined && data.correctDecisions !== undefined) {
+                    decisoesTxt = `${data.correctDecisions}/${data.totalDecisions}`;
+                }
+                
                 html += `<tr>
-                            <td>${scenarioId}</td>
-                            <td><strong>${Math.round(data.assertividade)}%</strong></td>
-                            <td>${data.tma || 'N/A'}</td>
-                            <td><span class="${badgeClass}" style="${badgeStyle}">${statusTxt}</span></td>
-                            <td>${data.attempts || 1}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${decodedScenId}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${nivelStr}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${Math.round(data.assertividade)}%</strong></td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${decisoesTxt}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.tma || 'N/A'}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;"><span class="${badgeClass}" style="${badgeStyle}">${statusTxt}</span></td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.attempts || 1}</td>
                          </tr>`;
             }
             html += `</tbody></table>`;
@@ -572,9 +590,9 @@ async function renderColaboradores() {
                 <td>${dataNasc}</td>
                 <td>${criadoEm}</td>
                 <td style="white-space:nowrap;">
-                    <button class="primary-btn small" onclick="openColabModal('${matEsc}')" title="Editar"><i class="ph ph-pencil"></i></button>
-                    <button class="secondary-btn small" style="margin-left:4px;" onclick="openReportModal('${matEsc}','${nomeEsc}')" title="Relatório"><i class="ph ph-chart-bar"></i></button>
-                    <button class="danger-btn small" style="margin-left:4px;" onclick="deleteColab('${matEsc}','${nomeEsc}')" title="Excluir"><i class="ph ph-trash"></i></button>
+                    <button class="primary-btn small" onclick="openColabModal('${fbKey}')" title="Editar"><i class="ph ph-pencil"></i></button>
+                    <button class="secondary-btn small" style="margin-left:4px;" onclick="openReportModal('${fbKey}','${nomeEsc}')" title="Relatório"><i class="ph ph-chart-bar"></i></button>
+                    <button class="danger-btn small" style="margin-left:4px;" onclick="deleteColab('${fbKey}','${nomeEsc}')" title="Excluir"><i class="ph ph-trash"></i></button>
                 </td>`;
             tbody.appendChild(tr);
         } catch (rowErr) {
@@ -664,3 +682,16 @@ window.deleteColab = async function(fbKey, nome) {
 };
 
 document.getElementById('btn-refresh-colaboradores').addEventListener('click', renderColaboradores);
+
+document.getElementById('search-colab').addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#colaboradores-tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(term)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});

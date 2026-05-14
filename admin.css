@@ -408,7 +408,7 @@ button {
 
 .colab-table th {
     padding: 0.9rem 1.2rem;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 0.8rem;
     letter-spacing: 0.04em;
@@ -420,6 +420,7 @@ button {
     border-bottom: 1px solid var(--border-color);
     color: var(--text-color);
     vertical-align: middle;
+    text-align: center;
 }
 
 .colab-table tbody tr:last-child td {
