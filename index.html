@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -20,13 +23,13 @@
             </a>
             <ul class="nav-links">
                 <li>
-                    <a href="#" class="nav-link" id="nav-primeiro-acesso">
+                    <a href="#" class="nav-link" id="nav-primeiro-acesso" onclick="openModal('modal-primeiro-acesso'); return false;">
                         <i class="ph ph-user-plus"></i>
                         <span>Primeiro Acesso</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="nav-link" id="nav-recuperar-acesso">
+                    <a href="#" class="nav-link" id="nav-recuperar-acesso" onclick="openModal('modal-recuperar-acesso'); return false;">
                         <i class="ph ph-key"></i>
                         <span>Recuperar Acesso</span>
                     </a>
@@ -132,6 +135,7 @@
                     <i class="ph ph-lock-simple id-code-icon" id="id-code-icon"></i>
                 </div>
                 <p class="id-code-hint">Insira o código fornecido pelo seu supervisor antes de iniciar.</p>
+                <span id="id-code-error-msg"></span>
             </div>
             
             <button class="btn-primary intro-btn" id="btn-start-sim" disabled>Iniciar Treinamento</button>
@@ -163,6 +167,82 @@
         </div>
     </footer>
 
+    <!-- Modal: Primeiro Acesso -->
+    <div class="auth-modal-overlay" id="modal-primeiro-acesso" style="display:none;">
+        <div class="auth-modal">
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon"><i class="ph ph-user-plus"></i></div>
+                <h2>Primeiro Acesso</h2>
+                <p>Preencha os dados abaixo para criar seu código de identificação.</p>
+                <button class="auth-modal-close" onclick="closeModal('modal-primeiro-acesso')" id="btn-close-primeiro-acesso"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="auth-modal-body">
+                <div class="auth-form-group">
+                    <label for="reg-nome"><i class="ph ph-user"></i> Nome Completo</label>
+                    <input type="text" id="reg-nome" placeholder="Seu nome completo" autocomplete="off">
+                </div>
+                <div class="auth-form-group">
+                    <label for="reg-nasc"><i class="ph ph-calendar"></i> Data de Nascimento</label>
+                    <input type="date" id="reg-nasc">
+                </div>
+                <div class="auth-form-group">
+                    <label for="reg-matricula"><i class="ph ph-identification-card"></i> Matrícula</label>
+                    <input type="text" id="reg-matricula" placeholder="Código fornecido pelo supervisor" autocomplete="off">
+                </div>
+                <div class="auth-form-group">
+                    <label for="reg-chave"><i class="ph ph-lock-key"></i> Palavra-chave</label>
+                    <input type="password" id="reg-chave" placeholder="Palavra-chave padrão">
+                </div>
+                <p class="auth-error" id="reg-error"></p>
+                <div class="auth-success" id="reg-success" style="display:none;">
+                    <i class="ph ph-check-circle"></i>
+                    <div>
+                        <p>Cadastro realizado! Seu código de identificação é:</p>
+                        <p class="auth-codigo" id="reg-codigo-display"></p>
+                        <p class="auth-hint">Guarde este código. Você precisará dele para acessar o simulador.</p>
+                    </div>
+                </div>
+                <button class="auth-btn-primary" id="btn-reg-submit">Criar Acesso</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Recuperar Acesso -->
+    <div class="auth-modal-overlay" id="modal-recuperar-acesso" style="display:none;">
+        <div class="auth-modal">
+            <div class="auth-modal-header">
+                <div class="auth-modal-icon"><i class="ph ph-key"></i></div>
+                <h2>Recuperar Acesso</h2>
+                <p>Informe seus dados para recuperar seu código de identificação.</p>
+                <button class="auth-modal-close" onclick="closeModal('modal-recuperar-acesso')" id="btn-close-recuperar-acesso"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="auth-modal-body">
+                <div class="auth-form-group">
+                    <label for="rec-nasc"><i class="ph ph-calendar"></i> Data de Nascimento</label>
+                    <input type="date" id="rec-nasc">
+                </div>
+                <div class="auth-form-group">
+                    <label for="rec-matricula"><i class="ph ph-identification-card"></i> Matrícula</label>
+                    <input type="text" id="rec-matricula" placeholder="Código fornecido pelo supervisor" autocomplete="off">
+                </div>
+                <div class="auth-form-group">
+                    <label for="rec-chave"><i class="ph ph-lock-key"></i> Palavra-chave</label>
+                    <input type="password" id="rec-chave" placeholder="Palavra-chave padrão">
+                </div>
+                <p class="auth-error" id="rec-error"></p>
+                <div class="auth-success" id="rec-success" style="display:none;">
+                    <i class="ph ph-check-circle"></i>
+                    <div>
+                        <p>Seu código de identificação é:</p>
+                        <p class="auth-codigo" id="rec-codigo-display"></p>
+                    </div>
+                </div>
+                <button class="auth-btn-primary" id="btn-rec-submit">Recuperar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
     <script src="welcome.js"></script>
     <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
 </body>

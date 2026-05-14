@@ -29,6 +29,7 @@
                 <a href="#" id="nav-dashboard" class="active"><i class="ph ph-squares-four"></i> Dashboard</a>
                 <a href="#" id="nav-categories"><i class="ph ph-folder"></i> Categorias</a>
                 <a href="#" id="nav-scenarios"><i class="ph ph-list-dashes"></i> Cenários</a>
+                <a href="#" id="nav-colaboradores"><i class="ph ph-users"></i> Colaboradores</a>
                 <a href="#" id="nav-backup"><i class="ph ph-cloud-arrow-up"></i> Backup</a>
             </nav>
             <button id="btn-logout" class="logout-btn"><i class="ph ph-sign-out"></i> Sair</button>
@@ -56,6 +57,13 @@
                             <div class="stat-info">
                                 <h3>Cenários</h3>
                                 <p id="stat-scenarios">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="ph ph-users"></i>
+                            <div class="stat-info">
+                                <h3>Colaboradores</h3>
+                                <p id="stat-colaboradores">0</p>
                             </div>
                         </div>
                     </div>
@@ -98,6 +106,31 @@
                             <label for="import-file" class="primary-btn alt"><i class="ph ph-upload"></i> Importar Banco (.json)</label>
                             <input type="file" id="import-file" accept=".json" style="display:none">
                         </div>
+                    </div>
+                </section>
+
+                <!-- Colaboradores Section -->
+                <section id="sec-colaboradores" class="admin-section hidden">
+                    <div class="section-header">
+                        <h1>Colaboradores Cadastrados</h1>
+                        <button id="btn-refresh-colaboradores" class="primary-btn"><i class="ph ph-arrows-clockwise"></i> Atualizar</button>
+                    </div>
+                    <div id="colaboradores-table-wrap">
+                        <table class="colab-table" id="colaboradores-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome Completo</th>
+                                    <th>Matrícula</th>
+                                    <th>Código de Identificação</th>
+                                    <th>Nasc.</th>
+                                    <th>Cadastrado em</th>
+                                </tr>
+                            </thead>
+                            <tbody id="colaboradores-tbody"></tbody>
+                        </table>
+                        <p id="colaboradores-empty" class="empty-state" style="display:none;">
+                            <i class="ph ph-users"></i> Nenhum colaborador cadastrado ainda.
+                        </p>
                     </div>
                 </section>
             </div>

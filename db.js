@@ -128,3 +128,126 @@ const DB = {
         }
     }
 };
+
+// ─── Autenticação de Colaboradores ───────────────────────────────────────────
+const AUTH = {
+
+    PALAVRA_CHAVE: '$ebrateL2026',
+
+    /**
+     * Registra um novo colaborador no Firebase.
+     * Retorna { ok: true, codigo } ou { ok: false, error }
+     */
+    registerColaborador: async function({ nomeCompleto, dataNascimento, matricula }) {
+        const primeiroNome = nomeCompleto.trim().split(' ')[0];
+        const codigo = `${primeiroNome}${matricula.trim()}`;
+        const ref = database.ref(`users/colaboradores/${encodeURIComponent(codigo)}`);
+
+        // Bloqueia matrícula duplicada
+        const existing = await database
+            .ref('users/colaboradores')
+            .orderByChild('matricula')
+            .equalTo(matricula.trim())
+            .once('value');
+
+        if (existing.exists()) {
+            return { ok: false, error: 'Matrícula já cadastrada no sistema.' };
+        }
+
+        await ref.set({
+            nomeCompleto: nomeCompleto.trim(),
+            dataNascimento: dataNascimento.trim(),
+            matricula: matricula.trim(),
+            codigoIdentificacao: codigo,
+            criadoEm: Date.now()
+        });
+
+        return { ok: true, codigo };
+    },
+
+    /**
+     * Valida um código de identificação.
+     * Retorna { ok: true, role, nome } ou { ok: false }
+     */
+    validateCodigo: async function(codigo) {
+        // Verifica admin
+        if (codigo === ADMIN_PASS) {
+            return { ok: true, role: 'admin', nome: 'Administrador' };
+        }
+
+        // Verifica colaborador
+        const snap = await database
+            .ref(`users/colaboradores/${encodeURIComponent(codigo)}`)
+            .once('value');
+
+        if (snap.exists()) {
+            const data = snap.val();
+            return { ok: true, role: 'colaborador', nome: data.nomeCompleto };
+        }
+
+        return { ok: false };
+    },
+
+    /**
+     * Busca código pelo conjunto dataNascimento + matricula para recuperação.
+     * Retorna { ok: true, codigo } ou { ok: false }
+     */
+    recoverCodigo: async function({ dataNascimento, matricula }) {
+        const snap = await database
+            .ref('users/colaboradores')
+            .orderByChild('matricula')
+            .equalTo(matricula.trim())
+            .once('value');
+
+        if (!snap.exists()) return { ok: false };
+
+        let found = null;
+        snap.forEach(child => {
+            const data = child.val();
+            if (data.dataNascimento === dataNascimento.trim()) {
+                found = data;
+            }
+        });
+
+        if (found) return { ok: true, codigo: found.codigoIdentificacao };
+        return { ok: false };
+    },
+
+    /**
+     * Retorna todos os colaboradores cadastrados.
+     */
+    getAllColaboradores: async function() {
+        const snap = await database.ref('users/colaboradores').once('value');
+        const result = [];
+        snap.forEach(child => result.push(child.val()));
+        return result;
+    }
+};
+
+// ─── Sessão ───────────────────────────────────────────────────────────────────
+const SESSION = {
+    TIMEOUT: 30 * 60 * 1000, // 30 min
+
+    save: function(codigo, role, nome) {
+        sessionStorage.setItem('userSession', JSON.stringify({ codigo, role, nome, lastActivity: Date.now() }));
+    },
+
+    get: function() {
+        try { return JSON.parse(sessionStorage.getItem('userSession')); } catch { return null; }
+    },
+
+    isValid: function() {
+        const s = this.get();
+        if (!s) return false;
+        return (Date.now() - s.lastActivity) < this.TIMEOUT;
+    },
+
+    touch: function() {
+        const s = this.get();
+        if (s) { s.lastActivity = Date.now(); sessionStorage.setItem('userSession', JSON.stringify(s)); }
+    },
+
+    clear: function() {
+        sessionStorage.removeItem('userSession');
+    }
+};

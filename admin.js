@@ -62,7 +62,7 @@ document.addEventListener('keyup', updateActivity);
 checkLoginState();
 
 // Navigation
-const navs = ['dashboard', 'categories', 'scenarios', 'backup'];
+const navs = ['dashboard', 'categories', 'scenarios', 'colaboradores', 'backup'];
 navs.forEach(nav => {
     document.getElementById(`nav-${nav}`).addEventListener('click', (e) => {
         e.preventDefault();
@@ -83,13 +83,16 @@ async function initAdmin() {
     await refreshDashboard();
     await renderCategories();
     await renderScenarios();
+    await renderColaboradores();
 }
 
 async function refreshDashboard() {
-    const cats = await DB.getAllCategories();
-    const scens = await DB.getAllScenarios();
-    document.getElementById('stat-categories').textContent = cats.length;
-    document.getElementById('stat-scenarios').textContent = scens.length;
+    const cats   = await DB.getAllCategories();
+    const scens  = await DB.getAllScenarios();
+    const colabs = await AUTH.getAllColaboradores();
+    document.getElementById('stat-categories').textContent  = cats.length;
+    document.getElementById('stat-scenarios').textContent   = scens.length;
+    document.getElementById('stat-colaboradores').textContent = colabs.length;
 }
 
 // --- Categories ---
@@ -456,3 +459,34 @@ document.getElementById('import-file').addEventListener('change', (e) => {
     };
     reader.readAsText(file);
 });
+// --- Colaboradores ---
+async function renderColaboradores() {
+    const colabs = await AUTH.getAllColaboradores();
+    const tbody  = document.getElementById('colaboradores-tbody');
+    const empty  = document.getElementById('colaboradores-empty');
+    tbody.innerHTML = '';
+
+    if (colabs.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    colabs.forEach(c => {
+        const tr = document.createElement('tr');
+        const dataNasc = c.dataNascimento
+            ? c.dataNascimento.split('-').reverse().join('/') : '-';
+        const criadoEm = c.criadoEm
+            ? new Date(c.criadoEm).toLocaleDateString('pt-BR') : '-';
+        tr.innerHTML = `
+            <td>${c.nomeCompleto}</td>
+            <td>${c.matricula}</td>
+            <td><code>${c.codigoIdentificacao}</code></td>
+            <td>${dataNasc}</td>
+            <td>${criadoEm}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById('btn-refresh-colaboradores').addEventListener('click', renderColaboradores);

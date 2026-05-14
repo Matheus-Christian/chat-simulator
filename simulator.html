@@ -8,6 +8,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Phosphor Icons for WhatsApp-like UI -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Auth Guard -->
+    <script>
+        (function() {
+            try {
+                var s = JSON.parse(sessionStorage.getItem('userSession'));
+                var TIMEOUT = 30 * 60 * 1000;
+                if (!s || (Date.now() - s.lastActivity) >= TIMEOUT) {
+                    sessionStorage.removeItem('userSession');
+                    window.location.replace('index.html');
+                } else {
+                    s.lastActivity = Date.now();
+                    sessionStorage.setItem('userSession', JSON.stringify(s));
+                }
+            } catch(e) {
+                window.location.replace('index.html');
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="app-container" id="app-container">

@@ -383,11 +383,75 @@ button {
     margin-bottom: 0.5rem;
 }
 
-.backup-card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-}
+.backup-card { background: var(--card-bg); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); }
 .backup-card p { margin-bottom: 1rem; }
 .backup-card hr { margin: 2rem 0; border: none; border-top: 1px solid var(--border-color); }
+
+/* Collaborator Table */
+#colaboradores-table-wrap {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.colab-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.colab-table thead {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+}
+
+.colab-table th {
+    padding: 0.9rem 1.2rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.colab-table td {
+    padding: 0.85rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    vertical-align: middle;
+}
+
+.colab-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.colab-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.colab-table code {
+    background: #e8f5e9;
+    color: #1b5e20;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.4;
+}
