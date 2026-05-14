@@ -244,7 +244,7 @@ const AUTH = {
     getAllColaboradores: async function() {
         const snap = await database.ref('users/colaboradores').once('value');
         const result = [];
-        snap.forEach(c => result.push(c.val()));
+        snap.forEach(c => { result.push(c.val()); });
         return result;
     }
 };
