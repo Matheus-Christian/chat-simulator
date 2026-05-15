@@ -13,9 +13,10 @@
             <i class="ph ph-lock-key logo-icon"></i>
             <h2>Acesso Restrito</h2>
             <p>Painel de Controle do Simulador</p>
-            <input type="password" id="admin-password" placeholder="Senha mestre">
+            <input type="email" id="admin-email" placeholder="E-mail">
+            <input type="password" id="admin-password" placeholder="Senha">
             <button id="btn-login" class="primary-btn">Entrar</button>
-            <p id="login-error" class="error-text hidden">Senha incorreta</p>
+            <p id="login-error" class="error-text hidden">Credenciais incorretas</p>
         </div>
     </div>
 
@@ -30,6 +31,7 @@
                 <a href="#" id="nav-categories"><i class="ph ph-folder"></i> Categorias</a>
                 <a href="#" id="nav-scenarios"><i class="ph ph-list-dashes"></i> Cenários</a>
                 <a href="#" id="nav-colaboradores"><i class="ph ph-users"></i> Colaboradores</a>
+                <a href="#" id="nav-admins"><i class="ph ph-shield-check"></i> Administradores</a>
                 <a href="#" id="nav-backup"><i class="ph ph-cloud-arrow-up"></i> Backup</a>
             </nav>
             <button id="btn-logout" class="logout-btn"><i class="ph ph-sign-out"></i> Sair</button>
@@ -141,11 +143,53 @@
                         </p>
                     </div>
                 </section>
+
+                <!-- Admins Section -->
+                <section id="sec-admins" class="admin-section hidden">
+                    <div class="section-header">
+                        <h1>Administradores (Produção)</h1>
+                        <button id="btn-new-admin" class="primary-btn" onclick="openAdminModal()"><i class="ph ph-shield-plus"></i> Novo Administrador</button>
+                    </div>
+                    <div class="info-alert" style="margin-bottom: 20px;">
+                        <i class="ph ph-info"></i>
+                        <p>Estes usuários utilizam o <strong>Firebase Authentication</strong>. O login deles possui criptografia em nuvem e garante que a base de dados opere com regras de segurança rigorosas de Produção.</p>
+                    </div>
+                    <div id="admins-table-wrap">
+                        <table class="colab-table" id="admins-table">
+                            <thead>
+                                <tr>
+                                    <th>E-mail</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-tbody"></tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 
     <!-- Modals -->
+    <div id="modal-admin" class="modal hidden">
+        <div class="modal-content">
+            <h2>Novo Administrador</h2>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="new-admin-email" placeholder="admin@sebratel.com.br">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="new-admin-password" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="modal-buttons">
+                <button class="secondary-btn btn-cancel" onclick="closeModal('modal-admin')">Cancelar</button>
+                <button class="primary-btn" id="btn-save-admin">Criar Admin</button>
+            </div>
+            <p id="admin-modal-error" class="error-text hidden" style="margin-top:10px;"></p>
+        </div>
+    </div>
+
     <div id="modal-category" class="modal hidden">
         <div class="modal-content large">
             <h2 id="modal-cat-title">Nova Categoria</h2>
@@ -269,6 +313,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
     <script src="db.js"></script>
     <script src="admin.js"></script>

@@ -26,6 +26,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (idCodeIcon)   idCodeIcon.className = 'ph ph-lock-simple id-code-icon';
     if (idCodeErrMsg) idCodeErrMsg.textContent = '';
     checkRequirements();
+
+    // Inicia sessão anônima para acesso ao DB em modo de Produção
+    DB.init().catch(e => console.warn("Aviso DB.init:", e));
 });
 
 // ─── Validação do botão Iniciar ───────────────────────────────────────────────
