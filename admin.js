@@ -29,29 +29,44 @@ function showDashboard() {
     initAdmin();
 }
 
-function performLogin() {
+async function performLogin() {
+    const email = document.getElementById('admin-email').value.trim();
     const pass = document.getElementById('admin-password').value;
-    if (pass === ADMIN_PASS) {
+    const btn = document.getElementById('btn-login');
+    const err = document.getElementById('login-error');
+
+    err.classList.add('hidden');
+    btn.disabled = true;
+    btn.textContent = "Verificando...";
+
+    const res = await AUTH.adminLogin(email, pass);
+    if (res.ok) {
         sessionStorage.setItem('adminLoggedIn', 'true');
+        sessionStorage.setItem('adminEmail', res.email);
         updateActivity();
         showDashboard();
     } else {
-        document.getElementById('login-error').classList.remove('hidden');
+        err.textContent = res.error;
+        err.classList.remove('hidden');
     }
+    btn.disabled = false;
+    btn.textContent = "Entrar";
 }
 
-function logout() {
+async function logout() {
     sessionStorage.removeItem('adminLoggedIn');
     sessionStorage.removeItem('adminLastActivity');
+    sessionStorage.removeItem('adminEmail');
+    await AUTH.adminLogout();
     window.location.reload();
 }
 
 document.getElementById('btn-login').addEventListener('click', performLogin);
 
-document.getElementById('admin-password').addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') {
-        performLogin();
-    }
+['admin-email', 'admin-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') performLogin();
+    });
 });
 
 // Atualiza a atividade a cada clique ou tecla para evitar logout enquanto estiver em uso
@@ -61,7 +76,7 @@ document.addEventListener('keyup', updateActivity);
 checkLoginState();
 
 // Navigation
-const navs = ['dashboard', 'categories', 'scenarios', 'colaboradores', 'backup'];
+const navs = ['dashboard', 'categories', 'scenarios', 'colaboradores', 'admins', 'backup'];
 navs.forEach(nav => {
     document.getElementById(`nav-${nav}`).addEventListener('click', (e) => {
         e.preventDefault();
@@ -74,6 +89,7 @@ navs.forEach(nav => {
         // Refresh section data when switching tabs
         if (nav === 'colaboradores') renderColaboradores();
         if (nav === 'dashboard') refreshDashboard();
+        if (nav === 'admins') renderAdmins();
     });
 });
 
@@ -86,6 +102,7 @@ async function initAdmin() {
     await renderCategories();
     await renderScenarios();
     await renderColaboradores();
+    await renderAdmins();
 }
 
 async function refreshDashboard() {
@@ -695,3 +712,76 @@ document.getElementById('search-colab').addEventListener('input', function() {
         }
     });
 });
+
+// --- Admins ---
+async function renderAdmins() {
+    const admins = await AUTH.getAllAdmins();
+    const tbody = document.getElementById('admins-tbody');
+    tbody.innerHTML = '';
+    
+    admins.forEach(admin => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${admin.email}</strong></td>
+            <td>
+                <button class="icon-btn small-btn" title="Remover Administrador" onclick="deleteAdmin('${admin.email}')"><i class="ph ph-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openAdminModal() {
+    document.getElementById('new-admin-email').value = '';
+    document.getElementById('new-admin-password').value = '';
+    document.getElementById('admin-modal-error').classList.add('hidden');
+    document.getElementById('modal-admin').classList.remove('hidden');
+}
+
+document.getElementById('btn-save-admin').addEventListener('click', async () => {
+    const email = document.getElementById('new-admin-email').value.trim();
+    const pass = document.getElementById('new-admin-password').value;
+    const errorEl = document.getElementById('admin-modal-error');
+    const btn = document.getElementById('btn-save-admin');
+
+    errorEl.classList.add('hidden');
+    if (!email || !pass) {
+        errorEl.textContent = 'Preencha todos os campos.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    if (pass.length < 6) {
+        errorEl.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+
+    const result = await AUTH.addAdmin(email, pass);
+
+    btn.disabled = false;
+    btn.textContent = 'Criar Admin';
+
+    if (!result.ok) {
+        errorEl.textContent = result.error;
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    document.getElementById('modal-admin').classList.add('hidden');
+    await renderAdmins();
+});
+
+window.deleteAdmin = async function(email) {
+    if (!confirm(`Remover o administrador "${email}"? Ele perderá acesso imediatamente.`)) return;
+    const result = await AUTH.deleteAdmin(email);
+    if (!result.ok) {
+        alert(result.error);
+    } else {
+        await renderAdmins();
+    }
+};
+
+window.openAdminModal = openAdminModal;

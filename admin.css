@@ -456,3 +456,33 @@ button {
     font-size: 2.5rem;
     opacity: 0.4;
 }
+
+/* ─── Admin Section Extras ───────────────────────────────────────────────── */
+.info-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 0.87rem;
+    color: #1e3a8a;
+}
+
+.info-alert i {
+    font-size: 1.3rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-alert p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ─── Login - two inputs stack ────────────────────────────────────────────── */
+.login-box input[type="email"] {
+    margin-bottom: 0.5rem;
+}

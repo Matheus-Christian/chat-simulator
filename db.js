@@ -11,6 +11,7 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
+const auth = firebase.auth();
 
 // Helper to escape invalid Firebase keys
 const safeKey = (str) => encodeURIComponent(str).replace(/\./g, '%2E');
@@ -20,17 +21,31 @@ const DB = {
 
     init: function() {
         return new Promise((resolve) => {
-            // Check if DB is empty, if so populate from default categories
-            database.ref('categories').once('value').then(snapshot => {
-                if (!snapshot.exists()) {
-                    console.log("Banco na nuvem vazio. Inicializando com categorias padrão...");
-                    const defaultCats = ["IPTV / TV Box", "Lentidão", "VoIP", "Teste de Velocidade", "LOS", "Câmeras"];
-                    const promises = defaultCats.map(cat => this.addCategory({ name: cat }));
-                    Promise.all(promises).then(() => resolve());
+            // First ensure we have some auth state to read production DB
+            auth.onAuthStateChanged((user) => {
+                if (!user) {
+                    auth.signInAnonymously().then(() => checkInitDB());
                 } else {
-                    resolve();
+                    checkInitDB();
                 }
             });
+
+            function checkInitDB() {
+                // Check if DB is empty, if so populate from default categories
+                database.ref('categories').once('value').then(snapshot => {
+                    if (!snapshot.exists()) {
+                        console.log("Banco na nuvem vazio. Inicializando com categorias padrão...");
+                        const defaultCats = ["IPTV / TV Box", "Lentidão", "VoIP", "Teste de Velocidade", "LOS", "Câmeras"];
+                        const promises = defaultCats.map(cat => DB.addCategory({ name: cat }));
+                        Promise.all(promises).then(() => resolve());
+                    } else {
+                        resolve();
+                    }
+                }).catch(e => {
+                    console.error("Erro ao ler DB. Verifique regras de segurança.", e);
+                    resolve();
+                });
+            }
         });
     },
 
@@ -167,8 +182,7 @@ const DB = {
     }
 };
 
-// ─── Constante Admin (compartilhada com admin.js) ─────────────────────────────
-const ADMIN_PASS = 'admin123';
+// ─── Autenticação e Gerenciamento ───────────────────────────────────────────
 
 // ─── Autenticação de Colaboradores ───────────────────────────────────────────
 const AUTH = {
@@ -241,9 +255,18 @@ const AUTH = {
 
     // Valida login pelo campo codigoIdentificacao
     validateCodigo: async function(codigo) {
-        if (codigo.trim() === ADMIN_PASS)
-            return { ok: true, role: 'admin', nome: 'Administrador' };
 
+        // Verifica se há um admin autenticado via Firebase Auth (sessão ativa do painel)
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.email) {
+            const key = safeKey(currentUser.email);
+            const adminSnap = await database.ref('users/admins/' + key).once('value');
+            if (adminSnap.exists()) {
+                return { ok: true, role: 'admin', nome: 'Administrador', fbKey: key };
+            }
+        }
+
+        // Valida colaborador pelo código de identificação
         const snap = await database.ref('users/colaboradores')
             .orderByChild('codigoIdentificacao').equalTo(codigo.trim()).once('value');
         if (snap.exists()) {
@@ -284,6 +307,73 @@ const AUTH = {
         const result = [];
         snap.forEach(c => { result.push(c.val()); });
         return result;
+    },
+
+    // ─── Gestão de Administradores (Firebase Auth) ──────────────────────────
+    adminLogin: async function(email, password) {
+        try {
+            const cred = await auth.signInWithEmailAndPassword(email, password);
+            const key = safeKey(cred.user.email);
+            const snap = await database.ref('users/admins/' + key).once('value');
+            if (snap.exists()) {
+                return { ok: true, email: cred.user.email };
+            } else {
+                await auth.signOut();
+                return { ok: false, error: 'Acesso negado. E-mail não possui privilégios de administrador.' };
+            }
+        } catch (e) {
+            console.error(e);
+            return { ok: false, error: 'Credenciais incorretas ou erro de conexão.' };
+        }
+    },
+
+    adminLogout: async function() {
+        return auth.signOut();
+    },
+
+    getAllAdmins: async function() {
+        const snap = await database.ref('users/admins').once('value');
+        const result = [];
+        if (snap.exists()) {
+            snap.forEach(child => { result.push({ email: child.val().email }); });
+        }
+        return result;
+    },
+
+    addAdmin: async function(email, password) {
+        try {
+            const key = safeKey(email.trim());
+            const snap = await database.ref('users/admins/' + key).once('value');
+            if (snap.exists()) return { ok: false, error: 'Administrador já existe.' };
+
+            // Criar auth user numa instância secundária para não deslogar o admin atual
+            const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+            await secondaryApp.auth().createUserWithEmailAndPassword(email.trim(), password);
+            await secondaryApp.auth().signOut();
+            await secondaryApp.delete();
+
+            // Adicionar à lista VIP
+            await database.ref('users/admins/' + key).set({ email: email.trim() });
+            return { ok: true };
+        } catch (e) {
+            console.error(e);
+            return { ok: false, error: e.message || 'Erro ao criar administrador no Firebase Auth.' };
+        }
+    },
+
+    deleteAdmin: async function(email) {
+        try {
+            const admins = await this.getAllAdmins();
+            if (admins.length <= 1) {
+                return { ok: false, error: 'Não é possível remover o último administrador.' };
+            }
+            
+            const key = safeKey(email.trim());
+            await database.ref('users/admins/' + key).remove();
+            return { ok: true };
+        } catch (e) {
+            return { ok: false, error: 'Erro ao remover administrador.' };
+        }
     }
 };
 
