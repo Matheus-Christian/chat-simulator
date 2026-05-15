@@ -220,32 +220,12 @@
                     <label for="rec-matricula"><i class="ph ph-identification-card"></i> Matrícula</label>
                     <input type="text" id="rec-matricula" placeholder="Código fornecido pelo supervisor" autocomplete="off">
                 </div>
-                <div class="auth-form-group">
-                    <label for="rec-chave"><i class="ph ph-lock-key"></i> Palavra-chave</label>
-                    <input type="password" id="rec-chave" placeholder="Palavra-chave padrão">
-                </div>
                 <p class="auth-error" id="rec-error"></p>
                 <div class="auth-success" id="rec-success" style="display:none;">
                     <i class="ph ph-check-circle"></i>
                     <div>
                         <p>Seu código de identificação é:</p>
                         <p class="auth-codigo" id="rec-codigo-display"></p>
-                    </div>
-                </div>
-                <div id="rec-change-section" style="display:none;">
-                    <div class="auth-change-divider"><span>Alterar código de identificação</span></div>
-                    <p class="auth-change-info" id="rec-change-info"></p>
-                    <div id="rec-change-form" style="display:none;">
-                        <div class="auth-warning">
-                            <i class="ph ph-warning"></i>
-                            <span>Esta alteração pode ser feita <strong>somente uma vez</strong>.</span>
-                        </div>
-                        <div class="auth-form-group" style="margin-top:10px;">
-                            <label for="rec-novo-codigo"><i class="ph ph-pencil"></i> Novo Código</label>
-                            <input type="text" id="rec-novo-codigo" placeholder="Mínimo 4 caracteres" autocomplete="off">
-                        </div>
-                        <p class="auth-error" id="rec-change-error"></p>
-                        <button class="auth-btn-primary" id="btn-rec-change" style="margin-top:8px;">Confirmar Alteração</button>
                     </div>
                 </div>
                 <button class="auth-btn-primary" id="btn-rec-submit">Recuperar Código</button>

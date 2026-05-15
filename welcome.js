@@ -106,24 +106,17 @@ btnStartSim.addEventListener('click', async () => {
 });
 
 // ─── Modal: Recuperar Acesso ──────────────────────────────────────────────────
-let recFbKeyAtual = null;
-
 document.getElementById('btn-rec-submit').addEventListener('click', async () => {
     const dataNascimento = document.getElementById('rec-nasc').value;
     const matricula      = document.getElementById('rec-matricula').value.trim();
-    const chave          = document.getElementById('rec-chave').value;
     const errorEl        = document.getElementById('rec-error');
     const successEl      = document.getElementById('rec-success');
-    const changeEl       = document.getElementById('rec-change-section');
     const btn            = document.getElementById('btn-rec-submit');
 
     errorEl.textContent     = '';
     successEl.style.display = 'none';
-    changeEl.style.display  = 'none';
-    recFbKeyAtual           = null;
 
-    if (!dataNascimento || !matricula || !chave) { errorEl.textContent = 'Preencha todos os campos.'; return; }
-    if (chave !== AUTH.PALAVRA_CHAVE) { errorEl.textContent = 'Palavra-chave incorreta.'; return; }
+    if (!dataNascimento || !matricula) { errorEl.textContent = 'Preencha todos os campos.'; return; }
 
     btn.disabled = true;
     btn.textContent = 'Verificando...';
@@ -135,58 +128,15 @@ document.getElementById('btn-rec-submit').addEventListener('click', async () => 
     btn.disabled = false;
     btn.textContent = 'Recuperar Código';
 
-    if (!result.ok) { errorEl.textContent = 'Dados não encontrados. Solicite acesso ao seu supervisor.'; return; }
+    if (!result.ok) { errorEl.textContent = 'Dados não encontrados. Verifique a data de nascimento e matrícula.'; return; }
 
     document.getElementById('rec-codigo-display').textContent = result.codigo;
     successEl.style.display = 'flex';
-    recFbKeyAtual = result.fbKey;
-    changeEl.style.display = 'block';
-
-    const infoEl = document.getElementById('rec-change-info');
-    const formEl = document.getElementById('rec-change-form');
-    if (result.codigoAlterado) {
-        infoEl.textContent = 'Você já alterou seu código anteriormente. Para redefini-lo, solicite ao supervisor.';
-        infoEl.style.color = '#666';
-        formEl.style.display = 'none';
-    } else {
-        infoEl.textContent = 'Você pode alterar seu código de identificação uma única vez.';
-        infoEl.style.color = '';
-        formEl.style.display = 'block';
-    }
-});
-
-document.getElementById('btn-rec-change').addEventListener('click', async () => {
-    const novoCodigo = document.getElementById('rec-novo-codigo').value.trim();
-    const errorEl    = document.getElementById('rec-change-error');
-    const btn        = document.getElementById('btn-rec-change');
-
-    errorEl.textContent = '';
-    if (!novoCodigo || novoCodigo.length < 4) { errorEl.textContent = 'O novo código deve ter pelo menos 4 caracteres.'; return; }
-    if (!recFbKeyAtual) { errorEl.textContent = 'Erro inesperado. Recarregue e tente novamente.'; return; }
-
-    btn.disabled = true;
-    btn.textContent = 'Alterando...';
-
-    let result;
-    try { result = await AUTH.changeColaboradorCodigo({ fbKey: recFbKeyAtual, novoCodigo }); }
-    catch (err) { errorEl.textContent = 'Erro ao conectar. Tente novamente.'; btn.disabled = false; btn.textContent = 'Confirmar Alteração'; return; }
-
-    btn.disabled = false;
-    btn.textContent = 'Confirmar Alteração';
-
-    if (!result.ok) { errorEl.textContent = result.error; return; }
-
-    document.getElementById('rec-codigo-display').textContent = novoCodigo;
-    document.getElementById('rec-change-form').style.display  = 'none';
-    const infoEl = document.getElementById('rec-change-info');
-    infoEl.textContent = '✅ Código alterado com sucesso! Use o novo código para acessar o simulador.';
-    infoEl.style.color = '#15803d';
 });
 
 // Reseta modal recuperação ao fechar
 document.getElementById('btn-close-recuperar-acesso').addEventListener('click', () => {
-    ['rec-error', 'rec-change-error'].forEach(id => document.getElementById(id).textContent = '');
-    ['rec-success', 'rec-change-section', 'rec-change-form'].forEach(id => document.getElementById(id).style.display = 'none');
-    ['rec-nasc', 'rec-matricula', 'rec-chave', 'rec-novo-codigo'].forEach(id => document.getElementById(id).value = '');
-    recMatriculaAtual = null;
+    document.getElementById('rec-error').textContent = '';
+    document.getElementById('rec-success').style.display = 'none';
+    ['rec-nasc', 'rec-matricula'].forEach(id => document.getElementById(id).value = '');
 });
